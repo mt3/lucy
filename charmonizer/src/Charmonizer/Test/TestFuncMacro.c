@@ -27,7 +27,7 @@ TestFuncMacro_prepare() {
 }
 
 #ifdef INLINE
-static INLINE char* S_inline_function() {
+static INLINE const char* S_inline_function() {
     return "inline works";
 }
 #endif
