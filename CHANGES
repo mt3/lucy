@@ -18,6 +18,33 @@ Revision history for Lucy
       https://issues.apache.org/jira/browse/LUCY-157
     * Disable LockFreeRegistry test by default.
       https://issues.apache.org/jira/browse/LUCY-158
+    * Always disable symlink tests on Windows
+      https://issues.apache.org/jira/browse/LUCY-160
+    * Always use CreateHardLink() on Windows
+      https://issues.apache.org/jira/browse/LUCY-161
+    * Use shell to redirect Charmonizer stderr on Windows
+      https://issues.apache.org/jira/browse/LUCY-162
+    * Target Windows XP
+      https://issues.apache.org/jira/browse/LUCY-163
+    * Skip forking tests under Cygwin
+      https://issues.apache.org/jira/browse/LUCY-164
+    * Line-ending-agnostic parsing of sample docs
+      https://issues.apache.org/jira/browse/LUCY-165
+    * Prefer POSIX over windows.h for process ID
+      https://issues.apache.org/jira/browse/LUCY-166
+    * INCREF/DECREF symbol collisions under Windows in FSDirHandle.c
+      https://issues.apache.org/jira/browse/LUCY-167
+    * Directory handling under Cygwin
+      https://issues.apache.org/jira/browse/LUCY-168
+    * Improve cleanup after MSVC
+      https://issues.apache.org/jira/browse/LUCY-169
+    * Charmonizer test compiles should use obj rather than exe when possible
+      https://issues.apache.org/jira/browse/LUCY-170
+    * Turn off stupid MSVC warnings
+      https://issues.apache.org/jira/browse/LUCY-171
+    * Clownfish should slurp files in text mode
+      https://issues.apache.org/jira/browse/LUCY-172
+
 
 0.1.0  2011-05-20
 
