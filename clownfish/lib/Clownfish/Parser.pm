@@ -17,7 +17,6 @@ use strict;
 use warnings;
 
 package Clownfish::Parser;
-use base qw( Parse::RecDescent );
 
 use Clownfish::Parcel;
 use Clownfish::Type;
@@ -29,6 +28,7 @@ use Clownfish::Class;
 use Clownfish::CBlock;
 use Clownfish::File;
 use Carp;
+use Parse::RecDescent;
 
 our $grammar = <<'END_GRAMMAR';
 
@@ -314,7 +314,28 @@ eofile:
 
 END_GRAMMAR
 
-sub new { return shift->SUPER::new($grammar) }
+our %inner_parser;
+
+sub new {
+    my $self = bless {}, __PACKAGE__;
+    $inner_parser{$self} = Parse::RecDescent->new($grammar);
+    return $self;
+}
+
+sub DESTROY {
+    my $self = shift;
+    delete $inner_parser{$self};
+}
+
+our $AUTOLOAD;
+
+sub AUTOLOAD {
+    my $self = shift;
+    my $inner_parser = $inner_parser{$self};
+    my ($meth) = $AUTOLOAD =~ /Clownfish::Parser::(\w+)/;
+    #die "No method '$AUTOLOAD'" unless $inner_parser->can($AUTOLOAD);
+    return $inner_parser->$meth(@_);
+}
 
 sub strip_plain_comments {
     my ( $self, $text ) = @_;
