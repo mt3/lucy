@@ -2041,3 +2041,22 @@ _write_xs_typemap(hierarchy)
 PPCODE:
     CFCPerlTypeMap_write_xs_typemap(hierarchy);
 
+
+MODULE = Clownfish    PACKAGE = Clownfish::Parser
+
+SV*
+_new(klass)
+    const char *klass;
+CODE:
+    CFCParser *self = CFCParser_new();
+    RETVAL = S_cfcbase_to_perlref(self);
+    CFCBase_decref((CFCBase*)self);
+OUTPUT: RETVAL
+
+void
+_destroy(self)
+    CFCParser *self;
+PPCODE:
+    CFCParser_destroy(self);
+
+

@@ -14,32 +14,27 @@
  * limitations under the License.
  */
 
-#include "CFCBase.h"
-#include "CFCCBlock.h"
-#include "CFCClass.h"
-#include "CFCDocuComment.h"
-#include "CFCDumpable.h"
-#include "CFCFile.h"
-#include "CFCFunction.h"
-#include "CFCHierarchy.h"
-#include "CFCMethod.h"
-#include "CFCParamList.h"
-#include "CFCParcel.h"
-#include "CFCParser.h"
-#include "CFCSymbol.h"
-#include "CFCType.h"
-#include "CFCUtil.h"
-#include "CFCVariable.h"
+#ifndef H_CFCPARSER
+#define H_CFCPARSER
 
-#include "CFCBindCore.h"
-#include "CFCBindAliases.h"
-#include "CFCBindClass.h"
-#include "CFCBindFile.h"
-#include "CFCBindFunction.h"
-#include "CFCBindMethod.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#include "CFCPerlSub.h"
-#include "CFCPerlMethod.h"
-#include "CFCPerlClass.h"
-#include "CFCPerlTypeMap.h"
+typedef struct CFCParser CFCParser;
+
+CFCParser*
+CFCParser_new(void);
+
+CFCParser*
+CFCParser_init(CFCParser *self);
+
+void
+CFCParser_destroy(CFCParser *self);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* H_CFCPARSER */
 

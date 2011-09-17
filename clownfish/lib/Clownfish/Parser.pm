@@ -317,7 +317,7 @@ END_GRAMMAR
 our %inner_parser;
 
 sub new {
-    my $self = bless {}, __PACKAGE__;
+    my $self = shift->_new();
     $inner_parser{$self} = Parse::RecDescent->new($grammar);
     return $self;
 }
@@ -325,6 +325,7 @@ sub new {
 sub DESTROY {
     my $self = shift;
     delete $inner_parser{$self};
+    $self->_destroy;
 }
 
 our $AUTOLOAD;
@@ -333,7 +334,6 @@ sub AUTOLOAD {
     my $self = shift;
     my $inner_parser = $inner_parser{$self};
     my ($meth) = $AUTOLOAD =~ /Clownfish::Parser::(\w+)/;
-    #die "No method '$AUTOLOAD'" unless $inner_parser->can($AUTOLOAD);
     return $inner_parser->$meth(@_);
 }
 

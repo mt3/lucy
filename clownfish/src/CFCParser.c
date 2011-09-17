@@ -14,32 +14,30 @@
  * limitations under the License.
  */
 
+#define CFC_NEED_BASE_STRUCT_DEF
 #include "CFCBase.h"
-#include "CFCCBlock.h"
-#include "CFCClass.h"
-#include "CFCDocuComment.h"
-#include "CFCDumpable.h"
-#include "CFCFile.h"
-#include "CFCFunction.h"
-#include "CFCHierarchy.h"
-#include "CFCMethod.h"
-#include "CFCParamList.h"
-#include "CFCParcel.h"
 #include "CFCParser.h"
-#include "CFCSymbol.h"
-#include "CFCType.h"
 #include "CFCUtil.h"
-#include "CFCVariable.h"
 
-#include "CFCBindCore.h"
-#include "CFCBindAliases.h"
-#include "CFCBindClass.h"
-#include "CFCBindFile.h"
-#include "CFCBindFunction.h"
-#include "CFCBindMethod.h"
+struct CFCParser {
+    CFCBase base;
+};
 
-#include "CFCPerlSub.h"
-#include "CFCPerlMethod.h"
-#include "CFCPerlClass.h"
-#include "CFCPerlTypeMap.h"
+CFCParser*
+CFCParser_new(void) {
+    CFCParser *self = (CFCParser*)CFCBase_allocate(sizeof(CFCParser),
+                                                   "Clownfish::Parser");
+    return CFCParser_init(self);
+}
+
+CFCParser*
+CFCParser_init(CFCParser *self) {
+    return self;
+}
+
+void
+CFCParser_destroy(CFCParser *self) {
+    CFCBase_destroy((CFCBase*)self);
+}
+
 
