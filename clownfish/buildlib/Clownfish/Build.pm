@@ -22,6 +22,8 @@ use base qw( Module::Build );
 use File::Spec::Functions qw( catfile );
 
 my $PPPORT_H_PATH = catfile(qw( include ppport.h ));
+my $LEMON_EXE_PATH = 'lemon';    # Don't bother compiling lemon for now.
+my $CFC_SOURCE_DIR = 'src';
 
 sub extra_ccflags {
     my $self = shift;
@@ -94,9 +96,26 @@ sub ACTION_ppport {
     }
 }
 
+# Run all .y files through lemon.
+sub ACTION_parsers {
+    my $self = shift;
+    # $self->dispatch('lemon');
+    my $y_files = $self->rscan_dir( $CFC_SOURCE_DIR, qr/\.y$/ );
+    for my $y_file (@$y_files) {
+        my $c_file = $y_file;
+        my $h_file = $y_file;
+        $c_file =~ s/\.y$/.c/ or die "no match";
+        $h_file =~ s/\.y$/.h/ or die "no match";
+        next if $self->up_to_date( $y_file, [ $c_file, $h_file ] );
+        $self->add_to_cleanup( $c_file, $h_file );
+        system( $LEMON_EXE_PATH, '-q', $y_file ) and die "lemon failed";
+    }
+}
+
 sub ACTION_code {
     my $self = shift;
     $self->dispatch('ppport');
+    $self->dispatch('parsers');
     $self->SUPER::ACTION_code;
 }
 

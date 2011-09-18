@@ -1,3 +1,5 @@
+%name CFCParseHeader
+
 /* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -14,35 +16,24 @@
  * limitations under the License.
  */
 
-#ifndef H_CFCPARSER
-#define H_CFCPARSER
+%token_type { CFCBase* }
+%token_destructor { CFCBase_decref((CFCBase*)$$); }
+%token_prefix CFC_TOKENTYPE_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+%extra_argument { CFCParserState *state }
 
-typedef struct CFCParser CFCParser;
-struct CFCBase;
-
-struct CFCParserState 
-{
-    struct CFCBase *result;
-    int errors;
-};
-typedef struct CFCParserState CFCParserState;
-
-CFCParser*
-CFCParser_new(void);
-
-CFCParser*
-CFCParser_init(CFCParser *self);
-
-void
-CFCParser_destroy(CFCParser *self);
-
-#ifdef __cplusplus
+%include {
+#include <stdio.h>
+#include <string.h>
+#include <assert.h>
+#include "CFC.h"
 }
-#endif
 
-#endif /* H_CFCPARSER */
+void_type(A) ::= void_type_specifier.
+{
+    int is_const = 0; /* FIXME get this from content. */
+    A = (CFCBase*)CFCType_new_void(is_const);
+}
+
+void_type_specifier ::= VOID.
 
