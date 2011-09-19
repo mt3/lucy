@@ -27,6 +27,19 @@
 #include <string.h>
 #include <assert.h>
 #include "CFC.h"
+#ifndef true
+  #define true 1
+  #define false 0
+#endif
+}
+
+%syntax_error {
+    state->errors = true;
+}
+
+result ::= void_type(A).
+{
+    state->result = A;
 }
 
 void_type(A) ::= void_type_specifier.

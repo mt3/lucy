@@ -32,7 +32,7 @@ like( $void_type->to_c, qr/const/, "'const' in C representation" );
 my $parser = Clownfish::Parser->new;
 
 is( $parser->void_type_specifier('void'), 'void', 'void_type_specifier' );
-$void_type = $parser->void_type('void');
+$void_type = $parser->parse('void');
 isa_ok( $void_type, "Clownfish::Type" );
 ok( $void_type && $void_type->is_void,
     "Parser calls new_void() when parsing 'void'" );

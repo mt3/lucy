@@ -2059,4 +2059,12 @@ _destroy(self)
 PPCODE:
     CFCParser_destroy(self);
 
+SV*
+parse(self, string)
+    CFCParser  *self;
+    const char *string;
+CODE:
+    CFCBase *got = CFCParser_parse(self, string);
+    RETVAL = S_cfcbase_to_perlref(got);
+OUTPUT: RETVAL
 
