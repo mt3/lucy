@@ -21,6 +21,7 @@
 #include "CFCBase.h"
 #include "CFCParser.h"
 #include "CFCUtil.h"
+#include "CFCLexHeader.h"
 #include "CFCParseHeader.h"
 
 #ifndef true
@@ -66,22 +67,22 @@ CFCParser_destroy(CFCParser *self) {
     CFCBase_destroy((CFCBase*)self);
 }
 
+static CFCParserState state;
+CFCParserState *CFCParser_current_state  = &state;
+void           *CFCParser_current_parser = NULL;
+
 CFCBase*
 CFCParser_parse(CFCParser *self, const char *string) {
-    void *header_parser = self->header_parser;
-    CFCParserState state;
+    CFCParser_current_parser = self->header_parser;
     state.result = NULL;
     state.errors = false;
 
-    if (strcmp(string, "void") == 0) {
-        CFCParseHeader(header_parser, CFC_TOKENTYPE_VOID, NULL, &state);
-    }
-    else {
-        CFCUtil_die("Stub");
-    }
+    YY_BUFFER_STATE buffer = yy_scan_bytes(string, (int)strlen(string));
+    yylex();
+    yy_delete_buffer(buffer);
 
     // Finish up.
-    CFCParseHeader(header_parser, 0, NULL, &state);
+    CFCParseHeader(CFCParser_current_parser, 0, NULL, &state);
     if (state.errors) {
         CFCUtil_die("Clownfish header syntax error");
     }

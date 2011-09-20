@@ -14,41 +14,20 @@
  * limitations under the License.
  */
 
-#ifndef H_CFCPARSER
-#define H_CFCPARSER
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef struct CFCParser CFCParser;
-struct CFCBase;
-
-struct CFCParserState 
-{
-    struct CFCBase *result;
-    int errors;
-};
-typedef struct CFCParserState CFCParserState;
-
-extern CFCParserState *CFCParser_current_state;
-extern void           *CFCParser_current_parser;
-
-CFCParser*
-CFCParser_new(void);
-
-CFCParser*
-CFCParser_init(CFCParser *self);
-
+%{
+#include "CFC.h"
+#include "CFCParseHeader.h"
 void
-CFCParser_destroy(CFCParser *self);
+CFCParseHeader(void *header_parser, int token_type, CFCBase *value,
+               CFCParserState *state);
+%}
 
-struct CFCBase*
-CFCParser_parse(CFCParser *self, const char *string);
+%option noyywrap
 
-#ifdef __cplusplus
+%%
+void {
+    CFCParseHeader(CFCParser_current_parser, CFC_TOKENTYPE_VOID, NULL,
+                   CFCParser_current_state);
 }
-#endif
-
-#endif /* H_CFCPARSER */
+%%
 
