@@ -29,7 +29,8 @@ CFCParseHeader(void *header_parser, int token_type, CFCBase *value,
 
 %%
 void       { PARSE(CFC_TOKENTYPE_VOID, NULL); }
-
 const      { PARSE(CFC_TOKENTYPE_CONST, NULL); }
+float      { PARSE(CFC_TOKENTYPE_FLOAT, NULL); }
+double     { PARSE(CFC_TOKENTYPE_DOUBLE, NULL); }
 %%
 

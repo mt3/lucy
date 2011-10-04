@@ -31,16 +31,22 @@
   #define true 1
   #define false 0
 #endif
+
+static const char KW_FLOAT[]    = "float";
+static const char KW_DOUBLE[]   = "double";
 }
 
 %syntax_error {
     state->errors = true;
 }
 
-result ::= void_type(A).
+result ::= simple_type(A).
 {
     state->result = A;
 }
+
+simple_type(A) ::= void_type(B).    { A = B; }
+simple_type(A) ::= float_type(B).   { A = B; }
 
 void_type(A) ::= CONST void_type_specifier.
 {
@@ -52,6 +58,15 @@ void_type(A) ::= void_type_specifier.
     A = (CFCBase*)CFCType_new_void(false);
 }
 
-void_type_specifier ::= VOID.
+%type float_type_specifier          {const char*}
+%destructor float_type_specifier        { }
 
+void_type_specifier ::= VOID.
+float_type_specifier(A) ::= FLOAT.   { A = KW_FLOAT; }
+float_type_specifier(A) ::= DOUBLE.  { A = KW_DOUBLE; }
+
+float_type(A) ::= float_type_specifier(B).
+{
+    A = (CFCBase*)CFCType_new_float(0, B);
+}
 
