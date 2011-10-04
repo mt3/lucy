@@ -42,11 +42,16 @@ result ::= void_type(A).
     state->result = A;
 }
 
+void_type(A) ::= CONST void_type_specifier.
+{
+    A = (CFCBase*)CFCType_new_void(true);
+}
+
 void_type(A) ::= void_type_specifier.
 {
-    int is_const = 0; /* FIXME get this from content. */
-    A = (CFCBase*)CFCType_new_void(is_const);
+    A = (CFCBase*)CFCType_new_void(false);
 }
 
 void_type_specifier ::= VOID.
+
 

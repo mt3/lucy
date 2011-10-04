@@ -29,5 +29,10 @@ void {
     CFCParseHeader(CFCParser_current_parser, CFC_TOKENTYPE_VOID, NULL,
                    CFCParser_current_state);
 }
+
+const {
+    CFCParseHeader(CFCParser_current_parser, CFC_TOKENTYPE_CONST, NULL,
+                   CFCParser_current_state);
+}
 %%
 
