@@ -84,7 +84,8 @@ CFCParser_parse(CFCParser *self, const char *string) {
     // Finish up.
     CFCParseHeader(CFCParser_current_parser, 0, NULL, &state);
     if (state.errors) {
-        CFCUtil_die("Clownfish header syntax error");
+        CFCBase_decref((CFCBase*)state.result);
+        return NULL;
     }
     return state.result;
 }
