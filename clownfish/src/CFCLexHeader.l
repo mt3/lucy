@@ -20,19 +20,16 @@
 void
 CFCParseHeader(void *header_parser, int token_type, CFCBase *value,
                CFCParserState *state);
+#define PARSE(token_type, value) \
+    CFCParseHeader(CFCParser_current_parser, token_type, value, \
+        CFCParser_current_state)
 %}
 
 %option noyywrap
 
 %%
-void {
-    CFCParseHeader(CFCParser_current_parser, CFC_TOKENTYPE_VOID, NULL,
-                   CFCParser_current_state);
-}
+void       { PARSE(CFC_TOKENTYPE_VOID, NULL); }
 
-const {
-    CFCParseHeader(CFCParser_current_parser, CFC_TOKENTYPE_CONST, NULL,
-                   CFCParser_current_state);
-}
+const      { PARSE(CFC_TOKENTYPE_CONST, NULL); }
 %%
 
