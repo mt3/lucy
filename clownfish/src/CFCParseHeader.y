@@ -70,6 +70,7 @@ result ::= simple_type(A).
     state->result = A;
 }
 
+simple_type(A) ::= object_type(B).  { A = B; }
 simple_type(A) ::= void_type(B).    { A = B; }
 simple_type(A) ::= float_type(B).   { A = B; }
 simple_type(A) ::= integer_type(B). { A = B; }
@@ -88,8 +89,10 @@ void_type(A) ::= void_type_specifier.
 
 %type float_type_specifier          {const char*}
 %type integer_type_specifier        {const char*}
+%type object_type_specifier         {char*}
 %destructor float_type_specifier        { }
 %destructor integer_type_specifier      { }
+%destructor object_type_specifier       { FREEMEM($$); }
 
 void_type_specifier ::= VOID.
 va_list_specifier         ::= VA_LIST.
@@ -138,5 +141,15 @@ va_list_type(A) ::= va_list_specifier.
 arbitrary_type(A) ::= ARBITRARY.
 {
     A = (CFCBase*)CFCType_new_arbitrary(current_parcel, CFCParser_current_state->text);
+}
+
+object_type(A) ::= object_type_specifier(B) ASTERISK.
+{
+    A = (CFCBase*)CFCType_new_object(0, CFCParser_get_parcel(), B, 1);
+}
+
+object_type_specifier(A) ::= OBJECT_TYPE_SPECIFIER.
+{
+    A = CFCUtil_strdup(CFCParser_current_state->text);
 }
 

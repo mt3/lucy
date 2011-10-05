@@ -45,9 +45,9 @@ for my $specifier (qw( Foo FooJr FooIII Foo4th )) {
         $specifier, "object_type_specifier: $specifier" );
     is( $parser->object_type_specifier("neato_$specifier"),
         "neato_$specifier", "object_type_specifier: neato_$specifier" );
-    my $type = $parser->object_type("$specifier*");
+    my $type = $parser->parse("$specifier*");
     ok( $type && $type->is_object, "$specifier*" );
-    $type = $parser->object_type("neato_$specifier*");
+    $type = $parser->parse("neato_$specifier*");
     ok( $type && $type->is_object, "neato_$specifier*" );
     $type = $parser->object_type("const $specifier*");
     ok( $type && $type->is_object, "const $specifier*" );

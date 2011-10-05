@@ -35,6 +35,8 @@ S_save_yytext() {
 }
 %}
 
+OBJECT_TYPE_SPECIFIER   ([a-z]+[a-z0-9]*_)?[A-Z]+[A-Z0-9]*[a-z]+[A-Za-z0-9]*
+
 %option noyywrap
 
 %%
@@ -61,5 +63,10 @@ va_list    { PARSE(CFC_TOKENTYPE_VA_LIST, NULL); }
                 S_save_yytext();
                 PARSE(CFC_TOKENTYPE_ARBITRARY, NULL); 
            }
+{OBJECT_TYPE_SPECIFIER} {
+                S_save_yytext();
+                PARSE(CFC_TOKENTYPE_OBJECT_TYPE_SPECIFIER, NULL); 
+           }
+[*]        { PARSE(CFC_TOKENTYPE_ASTERISK, NULL); }
 %%
 
