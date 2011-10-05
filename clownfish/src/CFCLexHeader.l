@@ -42,8 +42,12 @@ OBJECT_TYPE_SPECIFIER   ([a-z]+[a-z0-9]*_)?[A-Z]+[A-Z0-9]*[a-z]+[A-Za-z0-9]*
 %option yylineno
 
 %%
+const       { PARSE(CFC_TOKENTYPE_CONST, NULL); }
+nullable    { PARSE(CFC_TOKENTYPE_NULLABLE, NULL); } 
+incremented { PARSE(CFC_TOKENTYPE_INCREMENTED, NULL); } 
+decremented { PARSE(CFC_TOKENTYPE_DECREMENTED, NULL); } 
+
 void       { PARSE(CFC_TOKENTYPE_VOID, NULL); }
-const      { PARSE(CFC_TOKENTYPE_CONST, NULL); }
 float      { PARSE(CFC_TOKENTYPE_FLOAT, NULL); }
 double     { PARSE(CFC_TOKENTYPE_DOUBLE, NULL); }
 int8_t     { PARSE(CFC_TOKENTYPE_INT8_T, NULL); }

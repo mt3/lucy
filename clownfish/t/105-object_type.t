@@ -16,7 +16,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 57;
+use Test::More tests => 61;
 use Clownfish::Type;
 use Clownfish::Parser;
 
@@ -50,11 +50,16 @@ for my $specifier (qw( Foo FooJr FooIII Foo4th )) {
     $type = $parser->parse("neato_$specifier*");
     ok( $type && $type->is_object, "neato_$specifier*" );
     $type = $parser->parse("const $specifier*");
-    ok( $type && $type->is_object, "const $specifier*" );
+    ok( $type && $type->is_object && $type->const, "const $specifier*" );
     $type = $parser->parse("incremented $specifier*");
-    ok( $type && $type->is_object, "incremented $specifier*" );
+    ok( $type && $type->is_object && $type->incremented,
+        "incremented $specifier*" );
     $type = $parser->parse("decremented $specifier*");
-    ok( $type && $type->is_object, "decremented $specifier*" );
+    ok( $type && $type->is_object && $type->decremented,
+        "decremented $specifier*" );
+    $type = $parser->parse("nullable $specifier*");
+    ok( $type && $type->is_object && $type->nullable,
+        "nullable $specifier*" );
 }
 
 eval { my $type = Clownfish::Type->new_object };
