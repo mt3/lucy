@@ -76,6 +76,7 @@ CFCParser_parse(CFCParser *self, const char *string) {
     CFCParser_current_parser = self->header_parser;
     state.result = NULL;
     state.errors = false;
+    state.text   = NULL;
 
     YY_BUFFER_STATE buffer = yy_scan_bytes(string, (int)strlen(string));
     yylex();

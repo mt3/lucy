@@ -28,6 +28,8 @@ struct CFCParserState
 {
     struct CFCBase *result;
     int errors;
+    char *text;
+    size_t cap;
 };
 typedef struct CFCParserState CFCParserState;
 

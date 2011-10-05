@@ -23,6 +23,16 @@ CFCParseHeader(void *header_parser, int token_type, CFCBase *value,
 #define PARSE(token_type, value) \
     CFCParseHeader(CFCParser_current_parser, token_type, value, \
         CFCParser_current_state)
+static void
+S_save_yytext() {
+    if (yyleng >= CFCParser_current_state->cap) {
+        CFCParser_current_state->text
+            = REALLOCATE(CFCParser_current_state->text, yyleng + 1);
+        CFCParser_current_state->cap = yyleng + 1;
+    }
+    strncpy(CFCParser_current_state->text, yytext, yyleng);
+    CFCParser_current_state->text[yyleng] = '\0';
+}
 %}
 
 %option noyywrap
@@ -47,5 +57,9 @@ long       { PARSE(CFC_TOKENTYPE_LONG, NULL); }
 size_t     { PARSE(CFC_TOKENTYPE_SIZE_T, NULL); }
 bool_t     { PARSE(CFC_TOKENTYPE_BOOL_T, NULL); }
 va_list    { PARSE(CFC_TOKENTYPE_VA_LIST, NULL); }
+[A-Za-z0-9_]+_t { 
+                S_save_yytext();
+                PARSE(CFC_TOKENTYPE_ARBITRARY, NULL); 
+           }
 %%
 

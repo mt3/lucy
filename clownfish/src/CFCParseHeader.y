@@ -32,6 +32,8 @@
   #define false 0
 #endif
 
+static CFCParcel *current_parcel = NULL;
+
 static const char KW_INT8_T[]   = "int8_t";
 static const char KW_INT16_T[]  = "int16_t";
 static const char KW_INT32_T[]  = "int32_t";
@@ -52,6 +54,15 @@ static const char KW_DOUBLE[]   = "double";
 
 %syntax_error {
     state->errors = true;
+    FREEMEM(state->text);
+    state->text = NULL;
+    state->cap = 0;
+}
+
+%parse_accept {
+    FREEMEM(state->text);
+    state->text = NULL;
+    state->cap = 0;
 }
 
 result ::= simple_type(A).
@@ -63,6 +74,7 @@ simple_type(A) ::= void_type(B).    { A = B; }
 simple_type(A) ::= float_type(B).   { A = B; }
 simple_type(A) ::= integer_type(B). { A = B; }
 simple_type(A) ::= va_list_type(B). { A = B; }
+simple_type(A) ::= arbitrary_type(B). { A = B; }
 
 void_type(A) ::= CONST void_type_specifier.
 {
@@ -121,5 +133,10 @@ float_type(A) ::= CONST float_type_specifier(B).
 va_list_type(A) ::= va_list_specifier.
 {
     A = (CFCBase*)CFCType_new_va_list();
+}
+
+arbitrary_type(A) ::= ARBITRARY.
+{
+    A = (CFCBase*)CFCType_new_arbitrary(current_parcel, CFCParser_current_state->text);
 }
 

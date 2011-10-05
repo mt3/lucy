@@ -16,7 +16,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 12;
+use Test::More tests => 10;
 use Clownfish::Type;
 use Clownfish::Parser;
 
@@ -47,9 +47,7 @@ ok( !$foo_type->equals($compare_t_type),
 my $parser = Clownfish::Parser->new;
 
 for my $specifier (qw( foo_t Sort_compare_t )) {
-    is( $parser->arbitrary_type_specifier($specifier),
-        $specifier, 'arbitrary_type_specifier' );
-    my $type = $parser->arbitrary_type($specifier);
+    my $type = $parser->parse($specifier);
     ok( $type && $type->is_arbitrary, "arbitrary_type '$specifier'" );
     ok( !$parser->arbitrary_type_specifier( $specifier . "_y_p_e" ),
         "arbitrary_type_specifier guards against partial word matches"
