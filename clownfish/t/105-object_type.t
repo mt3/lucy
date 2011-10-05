@@ -49,11 +49,11 @@ for my $specifier (qw( Foo FooJr FooIII Foo4th )) {
     ok( $type && $type->is_object, "$specifier*" );
     $type = $parser->parse("neato_$specifier*");
     ok( $type && $type->is_object, "neato_$specifier*" );
-    $type = $parser->object_type("const $specifier*");
+    $type = $parser->parse("const $specifier*");
     ok( $type && $type->is_object, "const $specifier*" );
-    $type = $parser->object_type("incremented $specifier*");
+    $type = $parser->parse("incremented $specifier*");
     ok( $type && $type->is_object, "incremented $specifier*" );
-    $type = $parser->object_type("decremented $specifier*");
+    $type = $parser->parse("decremented $specifier*");
     ok( $type && $type->is_object, "decremented $specifier*" );
 }
 

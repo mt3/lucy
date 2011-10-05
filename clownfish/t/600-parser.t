@@ -106,7 +106,7 @@ for my $composite (@composites) {
 
 my @object_types = ( 'Obj *', "incremented Foo*", "decremented CharBuf *" );
 for my $object_type (@object_types) {
-    my $parsed = $parser->object_type($object_type);
+    my $parsed = $parser->parse($object_type);
     ok( $parsed && $parsed->is_object, "object_type: $object_type" );
 }
 

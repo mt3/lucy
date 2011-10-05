@@ -90,9 +90,13 @@ void_type(A) ::= void_type_specifier.
 %type float_type_specifier          {const char*}
 %type integer_type_specifier        {const char*}
 %type object_type_specifier         {char*}
+%type type_qualifier                {int}
+%type type_qualifier_list           {int}
 %destructor float_type_specifier        { }
 %destructor integer_type_specifier      { }
 %destructor object_type_specifier       { FREEMEM($$); }
+%destructor type_qualifier              { }
+%destructor type_qualifier_list         { }
 
 void_type_specifier ::= VOID.
 va_list_specifier         ::= VA_LIST.
@@ -148,8 +152,24 @@ object_type(A) ::= object_type_specifier(B) ASTERISK.
     A = (CFCBase*)CFCType_new_object(0, CFCParser_get_parcel(), B, 1);
 }
 
+object_type(A) ::= type_qualifier_list(B) object_type_specifier(C) ASTERISK.
+{
+    A = (CFCBase*)CFCType_new_object(B, CFCParser_get_parcel(), C, 1);
+}
+
 object_type_specifier(A) ::= OBJECT_TYPE_SPECIFIER.
 {
     A = CFCUtil_strdup(CFCParser_current_state->text);
 }
+
+type_qualifier(A) ::= CONST.       { A = CFCTYPE_CONST; }
+type_qualifier(A) ::= NULLABLE.    { A = CFCTYPE_NULLABLE; }
+type_qualifier(A) ::= INCREMENTED. { A = CFCTYPE_INCREMENTED; }
+type_qualifier(A) ::= DECREMENTED. { A = CFCTYPE_DECREMENTED; }
+
+type_qualifier_list(A) ::= type_qualifier(B).               { A = B; }
+type_qualifier_list(A) ::= type_qualifier_list CONST.       { A |= CFCTYPE_CONST; }
+type_qualifier_list(A) ::= type_qualifier_list NULLABLE.    { A |= CFCTYPE_NULLABLE; }
+type_qualifier_list(A) ::= type_qualifier_list INCREMENTED. { A |= CFCTYPE_INCREMENTED; }
+type_qualifier_list(A) ::= type_qualifier_list DECREMENTED. { A |= CFCTYPE_DECREMENTED; }
 
