@@ -38,6 +38,8 @@ S_save_yytext() {
 OBJECT_TYPE_SPECIFIER   ([a-z]+[a-z0-9]*_)?[A-Z]+[A-Z0-9]*[a-z]+[A-Za-z0-9]*
 
 %option noyywrap
+%option nodefault
+%option yylineno
 
 %%
 void       { PARSE(CFC_TOKENTYPE_VOID, NULL); }
@@ -68,5 +70,12 @@ va_list    { PARSE(CFC_TOKENTYPE_VA_LIST, NULL); }
                 PARSE(CFC_TOKENTYPE_OBJECT_TYPE_SPECIFIER, NULL); 
            }
 [*]        { PARSE(CFC_TOKENTYPE_ASTERISK, NULL); }
+
+[ \t\r\n]  /* Skip whitespace. */
+.          { 
+                printf("Bad input character '%s' at line %d\n", yytext, yylineno);
+                yyterminate();
+           }
+<<EOF>>    { yyterminate(); }
 %%
 
