@@ -62,6 +62,7 @@ result ::= simple_type(A).
 simple_type(A) ::= void_type(B).    { A = B; }
 simple_type(A) ::= float_type(B).   { A = B; }
 simple_type(A) ::= integer_type(B). { A = B; }
+simple_type(A) ::= va_list_type(B). { A = B; }
 
 void_type(A) ::= CONST void_type_specifier.
 {
@@ -79,6 +80,7 @@ void_type(A) ::= void_type_specifier.
 %destructor integer_type_specifier      { }
 
 void_type_specifier ::= VOID.
+va_list_specifier         ::= VA_LIST.
 integer_type_specifier(A) ::= INT8_T.    { A = KW_INT8_T; }
 integer_type_specifier(A) ::= INT16_T.   { A = KW_INT16_T; }
 integer_type_specifier(A) ::= INT32_T.   { A = KW_INT32_T; }
@@ -114,5 +116,10 @@ float_type(A) ::= float_type_specifier(B).
 float_type(A) ::= CONST float_type_specifier(B).
 {
     A = (CFCBase*)CFCType_new_float(CFCTYPE_CONST, B);
+}
+
+va_list_type(A) ::= va_list_specifier.
+{
+    A = (CFCBase*)CFCType_new_va_list();
 }
 

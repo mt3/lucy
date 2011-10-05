@@ -46,5 +46,6 @@ int        { PARSE(CFC_TOKENTYPE_INT, NULL); }
 long       { PARSE(CFC_TOKENTYPE_LONG, NULL); }
 size_t     { PARSE(CFC_TOKENTYPE_SIZE_T, NULL); }
 bool_t     { PARSE(CFC_TOKENTYPE_BOOL_T, NULL); }
+va_list    { PARSE(CFC_TOKENTYPE_VA_LIST, NULL); }
 %%
 
