@@ -16,7 +16,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 116;
+use Test::More tests => 107;
 
 BEGIN { use_ok('Clownfish::Parser') }
 
@@ -53,9 +53,6 @@ is( $parser->chy_integer_specifier($_), $_, "Charmony integer specifier $_" )
 
 is( $parser->object_type_specifier($_), $_, "object_type_specifier $_" )
     for qw( ByteBuf Obj ANDMatcher );
-
-is( $parser->type_specifier($_), $_, "type_specifier $_" )
-    for qw( uint32_t char int short long float double void ANDMatcher );
 
 is( $parser->type_qualifier($_), $_, "type_qualifier $_" ) for qw( const );
 

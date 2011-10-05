@@ -218,21 +218,6 @@ variable_modifier:
       'inert'
     { $item[1] }
 
-type_specifier:
-    (    object_type_specifier 
-       | primitive_type_specifier
-       | void_type_specifier
-       | va_list_type_specifier
-       | arbitrary_type_specifier
-    ) 
-    { $item[1] }
-
-primitive_type_specifier:
-      chy_integer_specifier
-    | c_integer_specifier 
-    | c_float_specifier 
-    { $item[1] }
-
 chy_integer_specifier:
     /(?:chy_)?(bool)_t(?!\w)/
 
