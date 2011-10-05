@@ -23,6 +23,7 @@ extern "C" {
 
 typedef struct CFCParser CFCParser;
 struct CFCBase;
+struct CFCParcel;
 
 struct CFCParserState 
 {
@@ -47,6 +48,13 @@ CFCParser_destroy(CFCParser *self);
 
 struct CFCBase*
 CFCParser_parse(CFCParser *self, const char *string);
+
+
+void
+CFCParser_set_parcel(struct CFCParcel *parcel);
+
+struct CFCParcel*
+CFCParser_get_parcel(void);
 
 #ifdef __cplusplus
 }

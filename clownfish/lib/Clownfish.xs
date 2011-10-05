@@ -2068,3 +2068,18 @@ CODE:
     RETVAL = S_cfcbase_to_perlref(got);
 OUTPUT: RETVAL
 
+void
+set_parcel(unused, parcel)
+    SV *unused;
+    CFCParcel *parcel;
+PPCODE:
+    CFCParser_set_parcel(parcel);
+
+SV*
+get_parcel(...)
+CODE:
+    CFCParcel *parcel = CFCParser_get_parcel();
+    RETVAL = S_cfcbase_to_perlref((CFCBase*)parcel);
+OUTPUT: RETVAL
+
+

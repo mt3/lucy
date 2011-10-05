@@ -332,9 +332,6 @@ sub strip_plain_comments {
     return $text;
 }
 
-our $parcel = undef;
-sub set_parcel { $parcel = $_[1] }
-
 sub new_integer_type {
     my ( undef, $item ) = @_;
     my $specifier = $item->{c_integer_specifier}
@@ -362,7 +359,7 @@ sub new_arbitrary_type {
     my ( undef, $item ) = @_;
     return Clownfish::Type->new_arbitrary(
         specifier => $item->{arbitrary_type_specifier},
-        parcel    => $parcel,
+        parcel    => get_parcel(),
     );
 }
 
@@ -370,7 +367,7 @@ sub new_object_type {
     my ( undef, $item ) = @_;
     my %args = (
         specifier => $item->{object_type_specifier},
-        parcel    => $parcel,
+        parcel    => get_parcel(),
     );
     $args{$_} = 1 for @{ $item->{'type_qualifier(s?)'} };
     return Clownfish::Type->new_object(%args);
@@ -420,7 +417,7 @@ sub new_var {
         $args{class_cnick} = $arg->{cnick} if $arg->{cnick};
     }
     return Clownfish::Variable->new(
-        parcel    => $parcel,
+        parcel    => get_parcel(),
         type      => $item->{type},
         micro_sym => $item->{declarator},
         %args,
@@ -458,7 +455,7 @@ sub new_sub {
     }
 
     return $class->new(
-        parcel      => $parcel,
+        parcel      => get_parcel(),
         docucomment => $docucom,
         class_name  => $arg->{class},
         class_cnick => $arg->{cnick},
@@ -494,7 +491,7 @@ sub new_class {
     }
 
     my $class = Clownfish::Class->create(
-        parcel            => $parcel,
+        parcel            => get_parcel(),
         class_name        => $item->{class_name},
         cnick             => $item->{'cnick(?)'}[0],
         parent_class_name => $item->{'class_inheritance(?)'}[0],

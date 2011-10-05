@@ -31,7 +31,7 @@ isa_ok( $parser->parcel_definition("parcel Crustacean cnick Crust;"),
 # Set and leave parcel.
 my $parcel = $parser->parcel_definition('parcel Crustacean cnick Crust;')
     or die "failed to process parcel_definition";
-is( $Clownfish::Parser::parcel, $parcel,
+is( Clownfish::Parser->get_parcel, $parcel,
     "parcel_definition sets internal \$parcel var" );
 
 is( $parser->strip_plain_comments("/*x*/"),

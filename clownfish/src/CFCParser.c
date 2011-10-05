@@ -20,6 +20,7 @@
 #define CFC_NEED_BASE_STRUCT_DEF
 #include "CFCBase.h"
 #include "CFCParser.h"
+#include "CFCParcel.h"
 #include "CFCUtil.h"
 #include "CFCLexHeader.h"
 #include "CFCParseHeader.h"
@@ -70,6 +71,7 @@ CFCParser_destroy(CFCParser *self) {
 static CFCParserState state;
 CFCParserState *CFCParser_current_state  = &state;
 void           *CFCParser_current_parser = NULL;
+CFCParcel      *CFCParser_current_parcel = NULL;
 
 CFCBase*
 CFCParser_parse(CFCParser *self, const char *string) {
@@ -89,5 +91,17 @@ CFCParser_parse(CFCParser *self, const char *string) {
         return NULL;
     }
     return state.result;
+}
+
+void
+CFCParser_set_parcel(CFCParcel *parcel) {
+    CFCBase_incref((CFCBase*)parcel);
+    CFCBase_decref((CFCBase*)CFCParser_current_parcel);
+    CFCParser_current_parcel = parcel;
+}
+
+CFCParcel*
+CFCParser_get_parcel(void) {
+    return CFCParser_current_parcel;
 }
 
