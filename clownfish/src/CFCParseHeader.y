@@ -111,3 +111,8 @@ float_type(A) ::= float_type_specifier(B).
     A = (CFCBase*)CFCType_new_float(0, B);
 }
 
+float_type(A) ::= CONST float_type_specifier(B).
+{
+    A = (CFCBase*)CFCType_new_float(CFCTYPE_CONST, B);
+}
+

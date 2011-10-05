@@ -16,7 +16,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 17;
+use Test::More tests => 15;
 use Clownfish::Type;
 use Clownfish::Parser;
 
@@ -31,12 +31,10 @@ like( $float_type->to_c, qr/const/, "'const' in C representation" );
 my $parser = Clownfish::Parser->new;
 
 for my $specifier (qw( float double)) {
-    is( $parser->c_float_specifier($specifier),
-        $specifier, "c_float_specifier: $specifier" );
     my $type = $parser->parse($specifier);
     isa_ok( $type, "Clownfish::Type" );
     ok( $type && $type->is_floating, "parsed specifier is_floating()" );
-    $type = $parser->float_type("const $specifier");
+    $type = $parser->parse("const $specifier");
     isa_ok( $type, "Clownfish::Type" );
     ok( $type && $type->is_floating, "parsed const specifier is_floating()" );
     ok( $type && $type->const,       "parsed const specifier is_floating()" );
