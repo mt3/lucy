@@ -32,6 +32,20 @@
   #define false 0
 #endif
 
+static const char KW_INT8_T[]   = "int8_t";
+static const char KW_INT16_T[]  = "int16_t";
+static const char KW_INT32_T[]  = "int32_t";
+static const char KW_INT64_T[]  = "int64_t";
+static const char KW_UINT8_T[]  = "uint8_t";
+static const char KW_UINT16_T[] = "uint16_t";
+static const char KW_UINT32_T[] = "uint32_t";
+static const char KW_UINT64_T[] = "uint64_t";
+static const char KW_CHAR[]     = "char";
+static const char KW_SHORT[]    = "short";
+static const char KW_INT[]      = "int";
+static const char KW_LONG[]     = "long";
+static const char KW_SIZE_T[]   = "size_t";
+static const char KW_BOOL_T[]   = "bool_t";
 static const char KW_FLOAT[]    = "float";
 static const char KW_DOUBLE[]   = "double";
 }
@@ -47,6 +61,7 @@ result ::= simple_type(A).
 
 simple_type(A) ::= void_type(B).    { A = B; }
 simple_type(A) ::= float_type(B).   { A = B; }
+simple_type(A) ::= integer_type(B). { A = B; }
 
 void_type(A) ::= CONST void_type_specifier.
 {
@@ -59,11 +74,37 @@ void_type(A) ::= void_type_specifier.
 }
 
 %type float_type_specifier          {const char*}
+%type integer_type_specifier        {const char*}
 %destructor float_type_specifier        { }
+%destructor integer_type_specifier      { }
 
 void_type_specifier ::= VOID.
+integer_type_specifier(A) ::= INT8_T.    { A = KW_INT8_T; }
+integer_type_specifier(A) ::= INT16_T.   { A = KW_INT16_T; }
+integer_type_specifier(A) ::= INT32_T.   { A = KW_INT32_T; }
+integer_type_specifier(A) ::= INT64_T.   { A = KW_INT64_T; }
+integer_type_specifier(A) ::= UINT8_T.   { A = KW_UINT8_T; }
+integer_type_specifier(A) ::= UINT16_T.  { A = KW_UINT16_T; }
+integer_type_specifier(A) ::= UINT32_T.  { A = KW_UINT32_T; }
+integer_type_specifier(A) ::= UINT64_T.  { A = KW_UINT64_T; }
+integer_type_specifier(A) ::= CHAR.      { A = KW_CHAR; }
+integer_type_specifier(A) ::= SHORT.     { A = KW_SHORT; }
+integer_type_specifier(A) ::= INT.       { A = KW_INT; }
+integer_type_specifier(A) ::= LONG.      { A = KW_LONG; }
+integer_type_specifier(A) ::= SIZE_T.    { A = KW_SIZE_T; }
+integer_type_specifier(A) ::= BOOL_T.    { A = KW_BOOL_T; }
 float_type_specifier(A) ::= FLOAT.   { A = KW_FLOAT; }
 float_type_specifier(A) ::= DOUBLE.  { A = KW_DOUBLE; }
+
+integer_type(A) ::= integer_type_specifier(B).
+{
+    A = (CFCBase*)CFCType_new_integer(0, B);
+}
+
+integer_type(A) ::= CONST integer_type_specifier(B).
+{
+    A = (CFCBase*)CFCType_new_integer(CFCTYPE_CONST, B);
+}
 
 float_type(A) ::= float_type_specifier(B).
 {
