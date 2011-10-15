@@ -248,7 +248,7 @@ type_postfix:
       { '*' }
     | '[' ']'
       { '[]' }
-    | '[' constant_expression ']'
+    | '[' /\d+/ ']'
       { "[$item[2]]" }
 
 identifier:
@@ -258,10 +258,6 @@ identifier:
 docucomment:
     /\/\*\*.*?\*\//s
     { Clownfish::DocuComment->parse($item[1]) }
-
-constant_expression:
-      /\d+/
-    | /[A-Z_]+/
 
 scalar_constant:
       hex_constant

@@ -23,8 +23,8 @@ use Clownfish::Parser;
 my $parser = Clownfish::Parser->new;
 
 is( $parser->type_postfix($_), $_, "postfix: $_" )
-    for ( '[]', '[A_CONSTANT]', '*' );
-is( $parser->type_postfix('[ FOO ]'), '[FOO]', "type_postfix: [ FOO ]" );
+    for ( '[]', '[32]', '*' );
+is( $parser->type_postfix('[ 3 ]'), '[5]', "type_postfix: [ 76 ]" );
 
 my @composite_type_strings = (
     qw(
@@ -35,7 +35,7 @@ my @composite_type_strings = (
         Obj**
         neato_method_t[]
         neato_method_t[1]
-        multi_dimensional_t[SOME][A_FEW]
+        multi_dimensional_t[1][10]
         ),
     'char * * ',
     'const Obj**',
