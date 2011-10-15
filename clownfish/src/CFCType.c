@@ -182,8 +182,10 @@ CFCType_new_object(int flags, CFCParcel *parcel, const char *specifier,
     if ((flags & CFCTYPE_INCREMENTED) && (flags & CFCTYPE_DECREMENTED)) {
         croak("Can't be both incremented and decremented");
     }
+
+    // Use default parcel if none supplied.
     if (!parcel) {
-        croak("Missing required param 'parcel'");
+        parcel = CFCParcel_singleton(NULL, NULL);
     }
 
     // Add flags.
