@@ -32,8 +32,6 @@
   #define false 0
 #endif
 
-static CFCParcel *current_parcel = NULL;
-
 static const char KW_INT8_T[]   = "int8_t";
 static const char KW_INT16_T[]  = "int16_t";
 static const char KW_INT32_T[]  = "int32_t";
@@ -144,7 +142,8 @@ va_list_type(A) ::= va_list_specifier.
 
 arbitrary_type(A) ::= ARBITRARY.
 {
-    A = (CFCBase*)CFCType_new_arbitrary(current_parcel, CFCParser_current_state->text);
+    A = (CFCBase*)CFCType_new_arbitrary(CFCParser_get_parcel(),
+                                        CFCParser_current_state->text);
 }
 
 object_type(A) ::= object_type_specifier(B) ASTERISK.
