@@ -31,7 +31,7 @@ my $type = $parser->parse('va_list');
 ok( $type && $type->is_va_list, "parse va_list" );
 TODO: {
     local $TODO = "No word boundaries in lex";
-    ok( !$parser->va_list_type_specifier('va_listable'),
+    ok( !$parser->parse('va_listable'),
         "va_list_type_specifier guards against partial word matches"
     );
 }
