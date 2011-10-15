@@ -16,7 +16,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 107;
+use Test::More tests => 103;
 
 BEGIN { use_ok('Clownfish::Parser') }
 
@@ -59,13 +59,9 @@ is( $parser->type_qualifier($_), $_, "type_qualifier $_" ) for qw( const );
 is( $parser->exposure_specifier($_), $_, "exposure_specifier $_" )
     for qw( public private parcel );
 
-is( $parser->type_postfix($_), $_, "postfix: $_" )
-    for ( '[]', '[A_CONSTANT]', '*' );
-is( $parser->type_postfix('[ FOO ]'), '[FOO]', "type_postfix: [ FOO ]" );
-
-isa_ok( $parser->type($_), "Clownfish::Type", "type $_" )
+isa_ok( $parser->parse($_), "Clownfish::Type", "type $_" )
     for ( 'const char *', 'Obj*', 'i32_t', 'char[]', 'long[1]',
-    'i64_t[FOO]' );
+    'i64_t[30]' );
 
 is( $parser->declarator($_), $_, "declarator: $_" )
     for ( 'foo', 'bar_bar_bar' );

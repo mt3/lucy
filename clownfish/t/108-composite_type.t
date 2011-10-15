@@ -16,15 +16,11 @@
 use strict;
 use warnings;
 
-use Test::More tests => 24;
+use Test::More tests => 23;
 use Clownfish::Type;
 use Clownfish::Parser;
 
 my $parser = Clownfish::Parser->new;
-
-is( $parser->type_postfix($_), $_, "postfix: $_" )
-    for ( '[]', '[32]', '*' );
-is( $parser->type_postfix('[ 3 ]'), '[5]', "type_postfix: [ 76 ]" );
 
 my @composite_type_strings = (
     qw(
@@ -33,6 +29,8 @@ my @composite_type_strings = (
         char***
         int32_t*
         Obj**
+        int8_t[]
+        int8_t[1]
         neato_method_t[]
         neato_method_t[1]
         multi_dimensional_t[1][10]
@@ -40,10 +38,11 @@ my @composite_type_strings = (
     'char * * ',
     'const Obj**',
     'const void*',
+    'int8_t[ 3 ]',
 );
 
 for my $input (@composite_type_strings) {
-    my $type = $parser->type($input);
+    my $type = $parser->parse($input);
     ok( $type && $type->is_composite, $input );
 }
 
@@ -74,20 +73,20 @@ ok( !$composite_type->equals($bar_composite),
     "equals spoiled by different child"
 );
 
-my $foo_array = $parser->type("foo_t[]")
+my $foo_array = $parser->parse("foo_t[]")
     or die "Can't parse foo_t[]";
 is( $foo_array->get_array, '[]', "get_array" );
 unlike( $foo_array->to_c, qr/\[\]/, "array subscripts not included by to_c" );
 
-my $foo_array_array = $parser->type("foo_t[][]")
+my $foo_array_array = $parser->parse("foo_t[][]")
     or die "Can't parse foo_t[][]";
 ok( !$foo_array->equals($foo_array_array),
     "equals spoiled by different array postfixes"
 );
 
-my $foo_star = $parser->type("foo_t*")
+my $foo_star = $parser->parse("foo_t*")
     or die "Can't parse foo_t*";
-my $foo_star_star = $parser->type("foo_t**")
+my $foo_star_star = $parser->parse("foo_t**")
     or die "Can't parse foo_t**";
 ok( !$foo_star->equals($foo_star_star),
     "equals spoiled by different levels of indirection" );

@@ -74,6 +74,12 @@ va_list    { PARSE(CFC_TOKENTYPE_VA_LIST, NULL); }
                 PARSE(CFC_TOKENTYPE_OBJECT_TYPE_SPECIFIER, NULL); 
            }
 [*]        { PARSE(CFC_TOKENTYPE_ASTERISK, NULL); }
+[\[]       { PARSE(CFC_TOKENTYPE_LEFT_SQUARE_BRACKET, NULL); }
+[\]]       { PARSE(CFC_TOKENTYPE_RIGHT_SQUARE_BRACKET, NULL); }
+-?[0-9]+   {
+                S_save_yytext();
+                PARSE(CFC_TOKENTYPE_INTEGER_LITERAL, NULL); 
+           }
 
 [ \t\r\n]  /* Skip whitespace. */
 .          { 

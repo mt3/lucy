@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <stdlib.h>
 #include "CFC.h"
 #ifndef true
   #define true 1
@@ -63,9 +64,23 @@ static const char KW_DOUBLE[]   = "double";
     state->cap = 0;
 }
 
-result ::= simple_type(A).
+result ::= type(A).
 {
     state->result = A;
+}
+
+type(A) ::= simple_type(B).            { A = B; }
+type(A) ::= composite_type(B).         { A = B; }
+
+composite_type(A) ::= simple_type(B) asterisk_postfix(C).
+{
+    int indirection = strlen(C);
+    A = (CFCBase*)CFCType_new_composite(0, (CFCType*)B, indirection, NULL);
+}
+
+composite_type(A) ::= simple_type(B) array_postfix(C).
+{
+    A = (CFCBase*)CFCType_new_composite(0, (CFCType*)B, 0, C);
 }
 
 simple_type(A) ::= object_type(B).  { A = B; }
@@ -90,11 +105,18 @@ void_type(A) ::= void_type_specifier.
 %type object_type_specifier         {char*}
 %type type_qualifier                {int}
 %type type_qualifier_list           {int}
+%type integer_literal               {long}
+%type asterisk_postfix              {char*}
+%type array_postfix                 {char*}
+%type array_postfix_elem            {char*}
 %destructor float_type_specifier        { }
 %destructor integer_type_specifier      { }
 %destructor object_type_specifier       { FREEMEM($$); }
 %destructor type_qualifier              { }
 %destructor type_qualifier_list         { }
+%destructor asterisk_postfix            { FREEMEM($$); }
+%destructor array_postfix               { FREEMEM($$); }
+%destructor array_postfix_elem          { FREEMEM($$); }
 
 void_type_specifier ::= VOID.
 va_list_specifier         ::= VA_LIST.
@@ -171,4 +193,38 @@ type_qualifier_list(A) ::= type_qualifier_list CONST.       { A |= CFCTYPE_CONST
 type_qualifier_list(A) ::= type_qualifier_list NULLABLE.    { A |= CFCTYPE_NULLABLE; }
 type_qualifier_list(A) ::= type_qualifier_list INCREMENTED. { A |= CFCTYPE_INCREMENTED; }
 type_qualifier_list(A) ::= type_qualifier_list DECREMENTED. { A |= CFCTYPE_DECREMENTED; }
+
+asterisk_postfix(A) ::= ASTERISK.
+{
+    A = CFCUtil_strdup("*");
+}
+asterisk_postfix(A) ::= asterisk_postfix(B) ASTERISK.
+{
+    A = CFCUtil_cat(B, "*", NULL);
+}
+
+array_postfix_elem(A) ::= LEFT_SQUARE_BRACKET RIGHT_SQUARE_BRACKET.
+{
+    A = CFCUtil_strdup("[]");
+}
+array_postfix_elem(A) ::= LEFT_SQUARE_BRACKET integer_literal(B) RIGHT_SQUARE_BRACKET.
+{
+    char buffer[30];
+    sprintf(buffer, "%ld", B);
+    A = CFCUtil_cat(CFCUtil_strdup(""), "[", buffer, "]", NULL);
+}
+
+array_postfix(A) ::= array_postfix_elem(B). 
+{ 
+    A = B; 
+}
+array_postfix(A) ::= array_postfix(B) array_postfix_elem(C).
+{
+    A = CFCUtil_cat(B, C, NULL);
+}
+
+integer_literal(A) ::= INTEGER_LITERAL.
+{
+    A = strtol(CFCParser_current_state->text, NULL, 10);
+}
 
