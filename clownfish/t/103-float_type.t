@@ -40,10 +40,7 @@ for my $specifier (qw( float double)) {
     ok( $type && $type->const,       "parsed const specifier is_floating()" );
     my $bogus = $specifier . "y";
 
-    TODO: {
-        local $TODO = "No word boundary support in lex";
-        ok( !$parser->parse($bogus),
-            "c_float_specifier guards against partial word matches" );
-    }
+    ok( !$parser->parse($bogus),
+        "c_float_specifier guards against partial word matches" );
 }
 

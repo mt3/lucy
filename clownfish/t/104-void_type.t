@@ -44,9 +44,6 @@ ok( $const_void_type && $const_void_type->const,
     "Parser preserves const when parsing 'const void'"
 );
 
-TODO: {
-    local $TODO = "no word boundary detection by lex";
-    ok( !$parser->parse('voidable'),
-        "void_type_specifier guards against partial word matches" );
-}
+ok( !$parser->parse('voidable'),
+    "void_type_specifier guards against partial word matches" );
 

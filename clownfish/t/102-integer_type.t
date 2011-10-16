@@ -57,12 +57,9 @@ for my $chy_specifier (@chy_specifiers) {
     isa_ok( $type, "Clownfish::Type" );
     ok( $type && $type->is_integer, "parsed const Type is_integer()" );
     ok( $type && $type->const,      "parsed const Type is const()" );
-    TODO: {
-        local $TODO = "No word boundaries in lex";
-        my $bogus = $chy_specifier . "oot_toot";
-        ok( !$parser->parse($bogus),
-            "chy_integer_specifier guards against partial word matches" );
-    }
+    my $bogus = $chy_specifier . "oot_toot";
+    ok( !$parser->parse($bogus),
+        "chy_integer_specifier guards against partial word matches" );
 }
 
 for my $c_specifier (@c_specifiers) {
@@ -73,10 +70,7 @@ for my $c_specifier (@c_specifiers) {
     isa_ok( $type, "Clownfish::Type" );
     ok( $type && $type->is_integer, "parsed const Type is_integer()" );
     ok( $type && $type->const,      "parsed const Type is const()" );
-    TODO: {
-        local $TODO = "No word boundaries in lex";
-        my $bogus = $c_specifier . "y";
-        ok( !$parser->parse($bogus),
-            "c_integer_specifier guards against partial word matches" );
-    }
+    my $bogus = $c_specifier . "y";
+    ok( !$parser->parse($bogus),
+        "c_integer_specifier guards against partial word matches" );
 }
