@@ -106,7 +106,7 @@ sub ACTION_parsers {
         my $h_file = $y_file;
         $c_file =~ s/\.y$/.c/ or die "no match";
         $h_file =~ s/\.y$/.h/ or die "no match";
-        next if $self->up_to_date( $y_file, [ $c_file, $h_file ] );
+        next if $self->up_to_date( $y_file, $c_file );
         $self->add_to_cleanup( $c_file, $h_file );
         system( $LEMON_EXE_PATH, '-q', $y_file ) and die "lemon failed";
     }
