@@ -16,7 +16,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 103;
+use Test::More tests => 100;
 
 BEGIN { use_ok('Clownfish::Parser') }
 
@@ -65,10 +65,6 @@ isa_ok( $parser->parse($_), "Clownfish::Type", "type $_" )
 
 is( $parser->declarator($_), $_, "declarator: $_" )
     for ( 'foo', 'bar_bar_bar' );
-
-isa_ok( $parser->param_variable($_),
-    "Clownfish::Variable", "param_variable: $_" )
-    for ( 'uint32_t baz;', 'CharBuf *stuff;', 'float **ptr;', );
 
 isa_ok( $parser->var_declaration_statement($_)->{declared},
     "Clownfish::Variable", "var_declaration_statement: $_" )

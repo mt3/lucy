@@ -57,8 +57,11 @@ CFCVariable_init(CFCVariable *self, struct CFCParcel *parcel,
                  const char *exposure, const char *class_name,
                  const char *class_cnick, const char *micro_sym,
                  struct CFCType *type) {
-    // Validate type.
+    // Validate params.
     CFCUTIL_NULL_CHECK(type);
+    if (!parcel) {
+        parcel = CFCParcel_singleton(NULL, NULL);
+    }
 
     // Default exposure to "local".
     const char *real_exposure = exposure ? exposure : "local";

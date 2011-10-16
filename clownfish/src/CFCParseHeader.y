@@ -71,6 +71,7 @@ result ::= type(A).
 
 type(A) ::= simple_type(B).            { A = B; }
 type(A) ::= composite_type(B).         { A = B; }
+type(A) ::= param_variable(B).         { A = B; } /* temporary */
 
 composite_type(A) ::= simple_type(B) asterisk_postfix(C).
 {
@@ -109,6 +110,7 @@ void_type(A) ::= void_type_specifier.
 %type asterisk_postfix              {char*}
 %type array_postfix                 {char*}
 %type array_postfix_elem            {char*}
+%type declarator                    {char*}
 %destructor float_type_specifier        { }
 %destructor integer_type_specifier      { }
 %destructor object_type_specifier       { FREEMEM($$); }
@@ -117,6 +119,7 @@ void_type(A) ::= void_type_specifier.
 %destructor asterisk_postfix            { FREEMEM($$); }
 %destructor array_postfix               { FREEMEM($$); }
 %destructor array_postfix_elem          { FREEMEM($$); }
+%destructor declarator                  { FREEMEM($$); }
 
 void_type_specifier ::= VOID.
 va_list_specifier         ::= VA_LIST.
@@ -226,5 +229,15 @@ array_postfix(A) ::= array_postfix(B) array_postfix_elem(C).
 integer_literal(A) ::= INTEGER_LITERAL.
 {
     A = strtol(CFCParser_current_state->text, NULL, 10);
+}
+
+declarator(A) ::= IDENTIFIER.
+{
+    A = CFCUtil_strdup(CFCParser_current_state->text);
+}
+
+param_variable(A) ::= type(B) declarator(C).
+{
+    A = (CFCBase*)CFCVariable_new(NULL, NULL, NULL, NULL, C, (CFCType*)B);
 }
 

@@ -80,6 +80,11 @@ va_list    { PARSE(CFC_TOKENTYPE_VA_LIST, NULL); }
                 S_save_yytext();
                 PARSE(CFC_TOKENTYPE_INTEGER_LITERAL, NULL); 
            }
+[a-zA-Z_][a-zA-Z0-9_]* { 
+                S_save_yytext();
+                PARSE(CFC_TOKENTYPE_IDENTIFIER, NULL); 
+           }
+           
 
 [ \t\r\n]  /* Skip whitespace. */
 .          { 
