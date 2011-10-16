@@ -55,6 +55,30 @@ CFCType_new(int flags, struct CFCParcel *parcel, const char *specifier,
                         c_string);
 }
 
+static void
+S_check_flags(int supplied, int acceptable, const char *type_name) {
+    int bad = (supplied & ~acceptable);
+    if (bad) {
+        char bad_flag[20];
+        if ((bad & CFCTYPE_CONST))            { strcpy(bad_flag, "CONST"); }
+        else if ((bad & CFCTYPE_NULLABLE))    { strcpy(bad_flag, "NULLABLE"); }
+        else if ((bad & CFCTYPE_INCREMENTED)) { strcpy(bad_flag, "INCREMENTED"); }
+        else if ((bad & CFCTYPE_DECREMENTED)) { strcpy(bad_flag, "DECREMENTED"); }
+        else if ((bad & CFCTYPE_OBJECT))      { strcpy(bad_flag, "OBJECT"); }
+        else if ((bad & CFCTYPE_PRIMITIVE))   { strcpy(bad_flag, "PRIMITIVE"); }
+        else if ((bad & CFCTYPE_INTEGER))     { strcpy(bad_flag, "INTEGER"); }
+        else if ((bad & CFCTYPE_FLOATING))    { strcpy(bad_flag, "FLOATING"); }
+        else if ((bad & CFCTYPE_STRING_TYPE)) { strcpy(bad_flag, "STRING_TYPE"); }
+        else if ((bad & CFCTYPE_VA_LIST))     { strcpy(bad_flag, "VA_LIST"); }
+        else if ((bad & CFCTYPE_ARBITRARY))   { strcpy(bad_flag, "ARBITRARY"); }
+        else if ((bad & CFCTYPE_COMPOSITE))   { strcpy(bad_flag, "COMPOSITE"); }
+        else {
+            CFCUtil_die("Unknown flags: %d", bad);
+        }
+        CFCUtil_die("Bad flag for type %s: %s", type_name, bad_flag);
+    }
+}
+
 CFCType*
 CFCType_init(CFCType *self, int flags, struct CFCParcel *parcel,
              const char *specifier, int indirection, const char *c_string) {
@@ -129,6 +153,8 @@ CFCType_new_integer(int flags, const char *specifier) {
     // Add flags.
     flags |= CFCTYPE_PRIMITIVE;
     flags |= CFCTYPE_INTEGER;
+    S_check_flags(flags, CFCTYPE_CONST | CFCTYPE_PRIMITIVE | CFCTYPE_INTEGER,
+                  "Integer");
 
     CFCType *self = CFCType_new(flags, NULL, full_specifier, 0, c_string);
     self->width = width;
@@ -165,6 +191,8 @@ CFCType_new_float(int flags, const char *specifier) {
 
     flags |= CFCTYPE_PRIMITIVE;
     flags |= CFCTYPE_FLOATING;
+    S_check_flags(flags, CFCTYPE_CONST | CFCTYPE_PRIMITIVE | CFCTYPE_FLOATING,
+                  "Floating");
 
     return CFCType_new(flags, NULL, specifier, 0, c_string);
 }
@@ -223,6 +251,14 @@ CFCType_new_object(int flags, CFCParcel *parcel, const char *specifier,
         sprintf(c_string, "%s*", full_specifier);
     }
 
+    int acceptable_flags = CFCTYPE_OBJECT
+                           | CFCTYPE_STRING_TYPE
+                           | CFCTYPE_CONST
+                           | CFCTYPE_NULLABLE
+                           | CFCTYPE_INCREMENTED
+                           | CFCTYPE_DECREMENTED;
+    S_check_flags(flags, acceptable_flags, "Object");
+
     return CFCType_new(flags, parcel, full_specifier, 1, c_string);
 }
 
@@ -233,6 +269,7 @@ CFCType_new_composite(int flags, CFCType *child, int indirection,
         croak("Missing required param 'child'");
     }
     flags |= CFCTYPE_COMPOSITE;
+    S_check_flags(flags, CFCTYPE_COMPOSITE | CFCTYPE_NULLABLE, "Composite");
 
     // Cache C representation.
     // NOTE: Array postfixes are NOT included.
