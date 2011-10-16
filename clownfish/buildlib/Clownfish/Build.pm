@@ -99,7 +99,6 @@ sub ACTION_ppport {
 # Run all .y files through lemon.
 sub ACTION_parsers {
     my $self = shift;
-    # $self->dispatch('lemon');
     my $y_files = $self->rscan_dir( $CFC_SOURCE_DIR, qr/\.y$/ );
     for my $y_file (@$y_files) {
         my $c_file = $y_file;
@@ -116,15 +115,18 @@ sub ACTION_parsers {
 sub ACTION_lexers {
     my $self = shift;
     my $l_files = $self->rscan_dir( $CFC_SOURCE_DIR, qr/\.l$/ );
+    # Rerun flex if lemon file changes.
+    my $y_files = $self->rscan_dir( $CFC_SOURCE_DIR, qr/\.y$/ );
     for my $l_file (@$l_files) {
         my $c_file = $l_file;
         my $h_file = $l_file;
         $c_file =~ s/\.l$/.c/ or die "no match";
         $h_file =~ s/\.l$/.h/ or die "no match";
-        next if $self->up_to_date( $l_file, [ $c_file, $h_file ] );
+        next
+            if $self->up_to_date( [ $l_file, @$y_files ],
+                    [ $c_file, $h_file ] );
         $self->add_to_cleanup( $c_file, $h_file );
         system( 'flex', '-o', $c_file, "--header-file=$h_file", $l_file )
-        #system( 'flex', '-o', $c_file, $l_file )
             and die "flex failed";
     }
 }
