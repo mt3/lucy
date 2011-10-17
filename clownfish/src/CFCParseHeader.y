@@ -264,7 +264,8 @@ declarator(A) ::= IDENTIFIER.
 
 param_variable(A) ::= type(B) declarator(C).
 {
-    A = (CFCBase*)CFCVariable_new(NULL, NULL, NULL, NULL, C, (CFCType*)B);
+    A = (CFCBase*)CFCVariable_new(CFCParser_get_parcel(), NULL, NULL, 
+                                  NULL, C, (CFCType*)B);
 }
 
 param_list(A) ::= LEFT_PAREN RIGHT_PAREN.
