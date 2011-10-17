@@ -48,6 +48,8 @@ CLASS_NAME_COMPONENT    [A-Z]+[A-Z0-9]*[a-z]+[A-Za-z0-9]*
 %option nodefault
 %option yylineno
 
+%x CBLOCK
+
 %%
 const       { PARSE(CFC_TOKENTYPE_CONST); }
 nullable    { PARSE(CFC_TOKENTYPE_NULLABLE); } 
@@ -103,13 +105,17 @@ parcel     { PARSE(CFC_TOKENTYPE_PARCEL); }
 \"([^\"\\]|\\.)*\"     { SAVE_AND_PARSE(CFC_TOKENTYPE_STRING_LITERAL); }
 
 [a-zA-Z_][a-zA-Z0-9_]* { SAVE_AND_PARSE(CFC_TOKENTYPE_IDENTIFIER); }
+
+__C__[[:space:]]*    { BEGIN(CBLOCK);  PARSE(CFC_TOKENTYPE_CBLOCK_START); }
+<CBLOCK>__END_C__    { BEGIN(INITIAL); PARSE(CFC_TOKENTYPE_CBLOCK_CLOSE); }
+<CBLOCK>(__END_C_[^_]|[^_])+   { SAVE_AND_PARSE(CFC_TOKENTYPE_BLOB); }
            
     /* Parse docucomments, but skip ordinary comments */
 "/**"([^*]|"*"[^/])*"*/" { SAVE_AND_PARSE(CFC_TOKENTYPE_DOCUCOMMENT); }
 "/*"([^*]|"*"[^/])*"*/"
 
 [ \t\r\n]  /* Skip whitespace. */
-.          { 
+<*>.       { 
                 printf("Bad input character '%s' at line %d\n", yytext, yylineno);
                 yyterminate();
            }

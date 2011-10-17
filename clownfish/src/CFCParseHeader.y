@@ -70,6 +70,7 @@ result ::= param_list(A).             { state->result = A; }
 result ::= param_variable(A).         { state->result = A; }
 result ::= docucomment(A).            { state->result = A; }
 result ::= parcel_definition(A).      { state->result = A; }
+result ::= cblock(A).                 { state->result = A; }
 
 parcel_definition(A) ::= PARCEL class_name(B) SEMICOLON.
 {
@@ -130,6 +131,7 @@ void_type(A) ::= void_type_specifier.
 %type declarator                    {char*}
 %type class_name                    {char*}
 %type cnick                         {char*}
+%type blob                          {char*}
 %destructor float_type_specifier        { }
 %destructor integer_type_specifier      { }
 %destructor object_type_specifier       { FREEMEM($$); }
@@ -146,6 +148,7 @@ void_type(A) ::= void_type_specifier.
 %destructor declarator                  { FREEMEM($$); }
 %destructor class_name                  { FREEMEM($$); }
 %destructor cnick                       { FREEMEM($$); }
+%destructor blob                        { FREEMEM($$); }
 
 void_type_specifier ::= VOID.
 va_list_specifier         ::= VA_LIST.
@@ -345,3 +348,12 @@ cnick(A) ::= CNICK CLASS_NAME_COMPONENT.
     A = CFCUtil_strdup(CFCParser_current_state->text);
 }
 
+cblock(A) ::= CBLOCK_START blob(B) CBLOCK_CLOSE.
+{
+    A = (CFCBase*)CFCCBlock_new(B);
+}
+
+blob(A) ::= BLOB.
+{
+    A = CFCUtil_strdup(CFCParser_current_state->text);
+}
