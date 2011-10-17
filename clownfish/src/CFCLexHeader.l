@@ -105,6 +105,11 @@ NULL       { PARSE(CFC_TOKENTYPE_NULL, NULL); }
                 PARSE(CFC_TOKENTYPE_IDENTIFIER, NULL); 
            }
            
+"/**"([^*]|"*"[^/])*"*/" {  /* Parse docucomments. */
+                S_save_yytext();
+                PARSE(CFC_TOKENTYPE_DOCUCOMMENT, NULL); 
+           }
+"/*"([^*]|"*"[^/])*"*/"  { /* Skip ordinary comments. */ }
 
 [ \t\r\n]  /* Skip whitespace. */
 .          { 

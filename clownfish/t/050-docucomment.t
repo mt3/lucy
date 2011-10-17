@@ -22,7 +22,7 @@ BEGIN { use_ok('Clownfish::DocuComment') }
 use Clownfish::Parser;
 
 my $parser = Clownfish::Parser->new;
-isa_ok( $parser->docucomment('/** foo. */'), "Clownfish::DocuComment" );
+isa_ok( $parser->parse('/** foo. */'), "Clownfish::DocuComment" );
 
 my $text = <<'END_COMMENT';
 /**
@@ -38,7 +38,7 @@ my $text = <<'END_COMMENT';
  */
 END_COMMENT
 
-my $docucomment = Clownfish::DocuComment->parse($text);
+my $docucomment = $parser->parse($text);
 
 like(
     $docucomment->get_description,

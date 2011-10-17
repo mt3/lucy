@@ -68,6 +68,7 @@ static const char KW_DOUBLE[]   = "double";
 result ::= type(A).                   { state->result = A; }
 result ::= param_list(A).             { state->result = A; }
 result ::= param_variable(A).         { state->result = A; }
+result ::= docucomment(A).            { state->result = A; }
 
 type(A) ::= simple_type(B).            { A = B; }
 type(A) ::= composite_type(B).         { A = B; }
@@ -300,5 +301,10 @@ param_list_elems(A) ::= param_variable(B) EQUALS scalar_constant(C).
 {
     A = (CFCBase*)CFCParamList_new(false);
     CFCParamList_add_param((CFCParamList*)A, (CFCVariable*)B, C);
+}
+
+docucomment(A) ::= DOCUCOMMENT.
+{
+    A = (CFCBase*)CFCDocuComment_parse(CFCParser_current_state->text);
 }
 
