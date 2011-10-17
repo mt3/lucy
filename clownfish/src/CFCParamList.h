@@ -43,6 +43,9 @@ CFCParamList_get_variables(CFCParamList *self);
 const char**
 CFCParamList_get_initial_values(CFCParamList *self);
 
+void
+CFCParamList_set_variadic(CFCParamList *self, int variadic);
+
 int
 CFCParamList_variadic(CFCParamList *self);
 

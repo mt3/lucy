@@ -145,6 +145,12 @@ CFCParamList_num_vars(CFCParamList *self) {
     return self->num_vars;
 }
 
+void
+CFCParamList_set_variadic(CFCParamList *self, int variadic) {
+    self->variadic = !!variadic;
+    S_generate_c_strings(self);
+}
+
 int
 CFCParamList_variadic(CFCParamList *self) {
     return self->variadic;
