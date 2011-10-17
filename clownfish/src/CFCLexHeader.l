@@ -15,31 +15,31 @@
  */
 
 %{
-#include "CFC.h"
-#include "CFCParseHeader.h"
+    #include "CFC.h"
+    #include "CFCParseHeader.h"
 
-void
-CFCParseHeader(void *header_parser, int token_type, CFCBase *value,
-               CFCParserState *state);
-/* Invoke Lemon-generated parser. */
-#define PARSE(token_type) \
-    CFCParseHeader(CFCParser_current_parser, token_type, NULL, \
-        CFCParser_current_state)
+    void
+    CFCParseHeader(void *header_parser, int token_type, CFCBase *value,
+                   CFCParserState *state);
+    /* Invoke Lemon-generated parser. */
+    #define PARSE(token_type) \
+        CFCParseHeader(CFCParser_current_parser, token_type, NULL, \
+            CFCParser_current_state)
 
-/* Copy yytext and then invoke parser. */
-#define SAVE_AND_PARSE(token_type) \
-    S_save_and_parse(token_type)
-static void
-S_save_and_parse(int token_type) {
-    if (yyleng >= CFCParser_current_state->cap) {
-        CFCParser_current_state->text
-            = REALLOCATE(CFCParser_current_state->text, yyleng + 1);
-        CFCParser_current_state->cap = yyleng + 1;
+    /* Copy yytext and then invoke parser. */
+    #define SAVE_AND_PARSE(token_type) \
+        S_save_and_parse(token_type)
+    static void
+    S_save_and_parse(int token_type) {
+        if (yyleng >= CFCParser_current_state->cap) {
+            CFCParser_current_state->text
+                = REALLOCATE(CFCParser_current_state->text, yyleng + 1);
+            CFCParser_current_state->cap = yyleng + 1;
+        }
+        strncpy(CFCParser_current_state->text, yytext, yyleng);
+        CFCParser_current_state->text[yyleng] = '\0';
+        PARSE(token_type);
     }
-    strncpy(CFCParser_current_state->text, yytext, yyleng);
-    CFCParser_current_state->text[yyleng] = '\0';
-    PARSE(token_type);
- }
 %}
 
 OBJECT_TYPE_SPECIFIER   ([a-z]+[a-z0-9]*_)?[A-Z]+[A-Z0-9]*[a-z]+[A-Za-z0-9]*
