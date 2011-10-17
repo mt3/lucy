@@ -17,14 +17,20 @@
 %{
 #include "CFC.h"
 #include "CFCParseHeader.h"
+
 void
 CFCParseHeader(void *header_parser, int token_type, CFCBase *value,
                CFCParserState *state);
+/* Invoke Lemon-generated parser. */
 #define PARSE(token_type) \
     CFCParseHeader(CFCParser_current_parser, token_type, NULL, \
         CFCParser_current_state)
+
+/* Copy yytext and then invoke parser. */
+#define SAVE_AND_PARSE(token_type) \
+    S_save_and_parse(token_type)
 static void
-S_save_yytext() {
+S_save_and_parse(int token_type) {
     if (yyleng >= CFCParser_current_state->cap) {
         CFCParser_current_state->text
             = REALLOCATE(CFCParser_current_state->text, yyleng + 1);
@@ -32,7 +38,8 @@ S_save_yytext() {
     }
     strncpy(CFCParser_current_state->text, yytext, yyleng);
     CFCParser_current_state->text[yyleng] = '\0';
-}
+    PARSE(token_type);
+ }
 %}
 
 OBJECT_TYPE_SPECIFIER   ([a-z]+[a-z0-9]*_)?[A-Z]+[A-Z0-9]*[a-z]+[A-Za-z0-9]*
@@ -68,14 +75,10 @@ va_list    { PARSE(CFC_TOKENTYPE_VA_LIST); }
 true       { PARSE(CFC_TOKENTYPE_TRUE); }
 false      { PARSE(CFC_TOKENTYPE_FALSE); }
 NULL       { PARSE(CFC_TOKENTYPE_NULL); }
-[A-Za-z0-9_]+_t { 
-                S_save_yytext();
-                PARSE(CFC_TOKENTYPE_ARBITRARY); 
-           }
-{OBJECT_TYPE_SPECIFIER} {
-                S_save_yytext();
-                PARSE(CFC_TOKENTYPE_OBJECT_TYPE_SPECIFIER); 
-           }
+
+[A-Za-z0-9_]+_t         { SAVE_AND_PARSE(CFC_TOKENTYPE_ARBITRARY); }
+{OBJECT_TYPE_SPECIFIER} { SAVE_AND_PARSE(CFC_TOKENTYPE_OBJECT_TYPE_SPECIFIER); }
+
 [*]        { PARSE(CFC_TOKENTYPE_ASTERISK); }
 [\[]       { PARSE(CFC_TOKENTYPE_LEFT_SQUARE_BRACKET); }
 [\]]       { PARSE(CFC_TOKENTYPE_RIGHT_SQUARE_BRACKET); }
@@ -84,32 +87,17 @@ NULL       { PARSE(CFC_TOKENTYPE_NULL); }
 \.\.\.     { PARSE(CFC_TOKENTYPE_ELLIPSIS); }
 ,          { PARSE(CFC_TOKENTYPE_COMMA); }
 =          { PARSE(CFC_TOKENTYPE_EQUALS); }
--?0x[0-9A-Fa-f]+ {
-                S_save_yytext();
-                PARSE(CFC_TOKENTYPE_HEX_LITERAL); 
-           }
--?[0-9]+   {
-                S_save_yytext();
-                PARSE(CFC_TOKENTYPE_INTEGER_LITERAL); 
-           }
--?[ ]*[0-9+].[0-9]+ {
-                S_save_yytext();
-                PARSE(CFC_TOKENTYPE_FLOAT_LITERAL); 
-           }
-\"([^\"\\]|\\.)*\" {
-                S_save_yytext();
-                PARSE(CFC_TOKENTYPE_STRING_LITERAL); 
-           }
-[a-zA-Z_][a-zA-Z0-9_]* { 
-                S_save_yytext();
-                PARSE(CFC_TOKENTYPE_IDENTIFIER); 
-           }
+
+-?0x[0-9A-Fa-f]+       { SAVE_AND_PARSE(CFC_TOKENTYPE_HEX_LITERAL); }
+-?[0-9]+               { SAVE_AND_PARSE(CFC_TOKENTYPE_INTEGER_LITERAL); }
+-?[ ]*[0-9+].[0-9]+    { SAVE_AND_PARSE(CFC_TOKENTYPE_FLOAT_LITERAL); }
+\"([^\"\\]|\\.)*\"     { SAVE_AND_PARSE(CFC_TOKENTYPE_STRING_LITERAL); }
+
+[a-zA-Z_][a-zA-Z0-9_]* { SAVE_AND_PARSE(CFC_TOKENTYPE_IDENTIFIER); }
            
-"/**"([^*]|"*"[^/])*"*/" {  /* Parse docucomments. */
-                S_save_yytext();
-                PARSE(CFC_TOKENTYPE_DOCUCOMMENT); 
-           }
-"/*"([^*]|"*"[^/])*"*/"  { /* Skip ordinary comments. */ }
+    /* Parse docucomments, but skip ordinary comments */
+"/**"([^*]|"*"[^/])*"*/" { SAVE_AND_PARSE(CFC_TOKENTYPE_DOCUCOMMENT); }
+"/*"([^*]|"*"[^/])*"*/"
 
 [ \t\r\n]  /* Skip whitespace. */
 .          { 
