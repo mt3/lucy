@@ -23,13 +23,13 @@ BEGIN { use_ok('Clownfish::Parser') }
 my $parser = Clownfish::Parser->new;
 isa_ok( $parser, "Clownfish::Parser" );
 
-isa_ok( $parser->parcel_definition("parcel Fish;"),
+isa_ok( $parser->parse("parcel Fish;"),
     "Clownfish::Parcel", "parcel_definition" );
-isa_ok( $parser->parcel_definition("parcel Crustacean cnick Crust;"),
+isa_ok( $parser->parse("parcel Crustacean cnick Crust;"),
     "Clownfish::Parcel", "parcel_definition with cnick" );
 
 # Set and leave parcel.
-my $parcel = $parser->parcel_definition('parcel Crustacean cnick Crust;')
+my $parcel = $parser->parse('parcel Crustacean cnick Crust;')
     or die "failed to process parcel_definition";
 is( Clownfish::Parser->get_parcel, $parcel,
     "parcel_definition sets internal \$parcel var" );

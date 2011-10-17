@@ -21,7 +21,7 @@ use Test::More tests => 2;
 use Clownfish::Parser;
 
 my $parser = Clownfish::Parser->new;
-$parser->parcel_definition('parcel Neato;')
+$parser->parse('parcel Neato;')
     or die "failed to process parcel_definition";
 
 my %args = (

@@ -23,7 +23,7 @@ use Clownfish::Parser;
 my $parser = Clownfish::Parser->new;
 
 # Set and leave parcel.
-my $parcel = $parser->parcel_definition('parcel Neato;')
+my $parcel = $parser->parse('parcel Neato;')
     or die "failed to process parcel_definition";
 
 for my $bad_specifier (qw( foo fooBar Foo_Bar FOOBAR 1Foo 1FOO )) {

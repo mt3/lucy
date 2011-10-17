@@ -69,6 +69,19 @@ result ::= type(A).                   { state->result = A; }
 result ::= param_list(A).             { state->result = A; }
 result ::= param_variable(A).         { state->result = A; }
 result ::= docucomment(A).            { state->result = A; }
+result ::= parcel_definition(A).      { state->result = A; }
+
+parcel_definition(A) ::= PARCEL class_name(B) SEMICOLON.
+{
+    A = (CFCBase*)CFCParcel_singleton(B, NULL);
+    CFCParser_set_parcel((CFCParcel*)A);
+}
+
+parcel_definition(A) ::= PARCEL class_name(B) cnick(C) SEMICOLON.
+{
+    A = (CFCBase*)CFCParcel_singleton(B, C);
+    CFCParser_set_parcel((CFCParcel*)A);
+}
 
 type(A) ::= simple_type(B).            { A = B; }
 type(A) ::= composite_type(B).         { A = B; }
@@ -115,6 +128,8 @@ void_type(A) ::= void_type_specifier.
 %type array_postfix                 {char*}
 %type array_postfix_elem            {char*}
 %type declarator                    {char*}
+%type class_name                    {char*}
+%type cnick                         {char*}
 %destructor float_type_specifier        { }
 %destructor integer_type_specifier      { }
 %destructor object_type_specifier       { FREEMEM($$); }
@@ -129,6 +144,8 @@ void_type(A) ::= void_type_specifier.
 %destructor array_postfix               { FREEMEM($$); }
 %destructor array_postfix_elem          { FREEMEM($$); }
 %destructor declarator                  { FREEMEM($$); }
+%destructor class_name                  { FREEMEM($$); }
+%destructor cnick                       { FREEMEM($$); }
 
 void_type_specifier ::= VOID.
 va_list_specifier         ::= VA_LIST.
@@ -190,7 +207,12 @@ object_type(A) ::= type_qualifier_list(B) object_type_specifier(C) ASTERISK.
     A = (CFCBase*)CFCType_new_object(B, CFCParser_get_parcel(), C, 1);
 }
 
-object_type_specifier(A) ::= OBJECT_TYPE_SPECIFIER.
+object_type_specifier(A) ::= CLASS_NAME_COMPONENT.
+{
+    A = CFCUtil_strdup(CFCParser_current_state->text);
+}
+
+object_type_specifier(A) ::= PREFIXED_OBJECT_TYPE_SPECIFIER.
 {
     A = CFCUtil_strdup(CFCParser_current_state->text);
 }
@@ -306,5 +328,20 @@ param_list_elems(A) ::= param_variable(B) EQUALS scalar_constant(C).
 docucomment(A) ::= DOCUCOMMENT.
 {
     A = (CFCBase*)CFCDocuComment_parse(CFCParser_current_state->text);
+}
+
+class_name(A) ::= CLASS_NAME_MULTI.
+{
+    A = CFCUtil_strdup(CFCParser_current_state->text);
+}
+
+class_name(A) ::= CLASS_NAME_COMPONENT.
+{
+    A = CFCUtil_strdup(CFCParser_current_state->text);
+}
+
+cnick(A) ::= CNICK CLASS_NAME_COMPONENT.
+{
+    A = CFCUtil_strdup(CFCParser_current_state->text);
 }
 
