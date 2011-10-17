@@ -28,7 +28,7 @@ my %args = (
     return_type => $parser->type('Obj*'),
     class_name  => 'Neato::Foo',
     class_cnick => 'Foo',
-    param_list  => $parser->param_list('(Foo* self)'),
+    param_list  => $parser->parse('(Foo* self)'),
     macro_sym   => 'Return_An_Obj',
     parcel      => 'Neato',
 );

@@ -31,7 +31,7 @@ my %args = (
     return_type => $parser->type('Obj*'),
     class_name  => 'Neato::Foo',
     class_cnick => 'Foo',
-    param_list  => $parser->param_list('(int32_t some_num)'),
+    param_list  => $parser->parse('(int32_t some_num)'),
     micro_sym   => 'return_an_obj',
 );
 

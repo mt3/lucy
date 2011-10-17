@@ -38,7 +38,7 @@ my $tread_water = Clownfish::Function->new(
     class_name  => 'Foo',
     return_type => $parser->type('void'),
     micro_sym   => 'tread_water',
-    param_list  => $parser->param_list('()'),
+    param_list  => $parser->parse('()'),
 );
 my %foo_create_args = (
     parcel     => 'Neato',

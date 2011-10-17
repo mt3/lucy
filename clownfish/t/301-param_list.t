@@ -30,13 +30,13 @@ isa_ok( $parser->parse($_),
     "Clownfish::Variable", "param_variable: $_" )
     for ( 'uint32_t baz', 'CharBuf *stuff', 'float **ptr', );
 
-my $param_list = $parser->param_list("(Obj *self, int num)");
+my $param_list = $parser->parse("(Obj *self, int num)");
 isa_ok( $param_list, "Clownfish::ParamList" );
 ok( !$param_list->variadic, "not variadic" );
 is( $param_list->to_c, 'neato_Obj* self, int num', "to_c" );
 is( $param_list->name_list, 'self, num', "name_list" );
 
-$param_list = $parser->param_list("(Obj *self=NULL, int num, ...)");
+$param_list = $parser->parse("(Obj *self=NULL, int num, ...)");
 ok( $param_list->variadic, "variadic" );
 is_deeply(
     $param_list->get_initial_values,

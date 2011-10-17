@@ -108,11 +108,11 @@ my %param_lists = (
     '()'                        => 0,
 );
 while ( my ( $param_list, $num_params ) = each %param_lists ) {
-    my $parsed = $parser->param_list($param_list);
+    my $parsed = $parser->parse($param_list);
     isa_ok( $parsed, "Clownfish::ParamList", "param_list: $param_list" );
 }
-ok( $parser->param_list("(int foo, ...)")->variadic, "variadic param list" );
-my $param_list = $parser->param_list(q|(int foo = 0xFF, char *bar ="blah")|);
+ok( $parser->parse("(int foo, ...)")->variadic, "variadic param list" );
+my $param_list = $parser->parse(q|(int foo = 0xFF, char *bar ="blah")|);
 is_deeply(
     $param_list->get_initial_values,
     [ '0xFF', '"blah"' ],

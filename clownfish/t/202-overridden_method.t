@@ -29,7 +29,7 @@ my %args = (
     return_type => $parser->type('Obj*'),
     class_name  => 'Neato::Foo',
     class_cnick => 'Foo',
-    param_list  => $parser->param_list('(Foo *self)'),
+    param_list  => $parser->parse('(Foo *self)'),
     macro_sym   => 'Return_An_Obj',
     parcel      => 'Neato',
 );
@@ -37,7 +37,7 @@ my %args = (
 my $orig      = Clownfish::Method->new(%args);
 my $overrider = Clownfish::Method->new(
     %args,
-    param_list  => $parser->param_list('(FooJr *self)'),
+    param_list  => $parser->parse('(FooJr *self)'),
     class_name  => 'Neato::Foo::FooJr',
     class_cnick => 'FooJr'
 );

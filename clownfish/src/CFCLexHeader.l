@@ -65,6 +65,9 @@ long       { PARSE(CFC_TOKENTYPE_LONG, NULL); }
 size_t     { PARSE(CFC_TOKENTYPE_SIZE_T, NULL); }
 bool_t     { PARSE(CFC_TOKENTYPE_BOOL_T, NULL); }
 va_list    { PARSE(CFC_TOKENTYPE_VA_LIST, NULL); }
+true       { PARSE(CFC_TOKENTYPE_TRUE, NULL); }
+false      { PARSE(CFC_TOKENTYPE_FALSE, NULL); }
+NULL       { PARSE(CFC_TOKENTYPE_NULL, NULL); }
 [A-Za-z0-9_]+_t { 
                 S_save_yytext();
                 PARSE(CFC_TOKENTYPE_ARBITRARY, NULL); 
@@ -76,9 +79,26 @@ va_list    { PARSE(CFC_TOKENTYPE_VA_LIST, NULL); }
 [*]        { PARSE(CFC_TOKENTYPE_ASTERISK, NULL); }
 [\[]       { PARSE(CFC_TOKENTYPE_LEFT_SQUARE_BRACKET, NULL); }
 [\]]       { PARSE(CFC_TOKENTYPE_RIGHT_SQUARE_BRACKET, NULL); }
+[\(]       { PARSE(CFC_TOKENTYPE_LEFT_PAREN, NULL); }
+[\)]       { PARSE(CFC_TOKENTYPE_RIGHT_PAREN, NULL); }
+\.\.\.     { PARSE(CFC_TOKENTYPE_ELLIPSIS, NULL); }
+,          { PARSE(CFC_TOKENTYPE_COMMA, NULL); }
+=          { PARSE(CFC_TOKENTYPE_EQUALS, NULL); }
+-?0x[0-9A-Fa-f]+ {
+                S_save_yytext();
+                PARSE(CFC_TOKENTYPE_HEX_LITERAL, NULL); 
+           }
 -?[0-9]+   {
                 S_save_yytext();
                 PARSE(CFC_TOKENTYPE_INTEGER_LITERAL, NULL); 
+           }
+-?[ ]*[0-9+].[0-9]+ {
+                S_save_yytext();
+                PARSE(CFC_TOKENTYPE_FLOAT_LITERAL, NULL); 
+           }
+\"([^\"\\]|\\.)*\" {
+                S_save_yytext();
+                PARSE(CFC_TOKENTYPE_STRING_LITERAL, NULL); 
            }
 [a-zA-Z_][a-zA-Z0-9_]* { 
                 S_save_yytext();

@@ -64,14 +64,13 @@ static const char KW_DOUBLE[]   = "double";
     state->cap = 0;
 }
 
-result ::= type(A).
-{
-    state->result = A;
-}
+/* Temporary. */
+result ::= type(A).                   { state->result = A; }
+result ::= param_list(A).             { state->result = A; }
+result ::= param_variable(A).         { state->result = A; }
 
 type(A) ::= simple_type(B).            { A = B; }
 type(A) ::= composite_type(B).         { A = B; }
-type(A) ::= param_variable(B).         { A = B; } /* temporary */
 
 composite_type(A) ::= simple_type(B) asterisk_postfix(C).
 {
@@ -106,7 +105,11 @@ void_type(A) ::= void_type_specifier.
 %type object_type_specifier         {char*}
 %type type_qualifier                {int}
 %type type_qualifier_list           {int}
-%type integer_literal               {long}
+%type scalar_constant               {char*}
+%type integer_literal               {char*}
+%type float_literal                 {char*}
+%type hex_literal                   {char*}
+%type string_literal                {char*}
 %type asterisk_postfix              {char*}
 %type array_postfix                 {char*}
 %type array_postfix_elem            {char*}
@@ -116,6 +119,11 @@ void_type(A) ::= void_type_specifier.
 %destructor object_type_specifier       { FREEMEM($$); }
 %destructor type_qualifier              { }
 %destructor type_qualifier_list         { }
+%destructor scalar_constant             { FREEMEM($$); }
+%destructor integer_literal             { FREEMEM($$); }
+%destructor float_literal               { FREEMEM($$); }
+%destructor hex_literal                 { FREEMEM($$); }
+%destructor string_literal              { FREEMEM($$); }
 %destructor asterisk_postfix            { FREEMEM($$); }
 %destructor array_postfix               { FREEMEM($$); }
 %destructor array_postfix_elem          { FREEMEM($$); }
@@ -212,9 +220,7 @@ array_postfix_elem(A) ::= LEFT_SQUARE_BRACKET RIGHT_SQUARE_BRACKET.
 }
 array_postfix_elem(A) ::= LEFT_SQUARE_BRACKET integer_literal(B) RIGHT_SQUARE_BRACKET.
 {
-    char buffer[30];
-    sprintf(buffer, "%ld", B);
-    A = CFCUtil_cat(CFCUtil_strdup(""), "[", buffer, "]", NULL);
+    A = CFCUtil_cat(CFCUtil_strdup(""), "[", B, "]", NULL);
 }
 
 array_postfix(A) ::= array_postfix_elem(B). 
@@ -226,9 +232,29 @@ array_postfix(A) ::= array_postfix(B) array_postfix_elem(C).
     A = CFCUtil_cat(B, C, NULL);
 }
 
+scalar_constant(A) ::= hex_literal(B).     { A = B; }
+scalar_constant(A) ::= float_literal(B).   { A = B; }
+scalar_constant(A) ::= integer_literal(B). { A = B; }
+scalar_constant(A) ::= string_literal(B).  { A = B; }
+scalar_constant(A) ::= TRUE.     { A = CFCUtil_strdup("true"); }
+scalar_constant(A) ::= FALSE.    { A = CFCUtil_strdup("false"); }
+scalar_constant(A) ::= NULL.     { A = CFCUtil_strdup("NULL"); }
+
 integer_literal(A) ::= INTEGER_LITERAL.
 {
-    A = strtol(CFCParser_current_state->text, NULL, 10);
+    A = CFCUtil_strdup(CFCParser_current_state->text);
+}
+float_literal(A) ::= FLOAT_LITERAL.
+{
+    A = CFCUtil_strdup(CFCParser_current_state->text);
+}
+hex_literal(A) ::= HEX_LITERAL.
+{
+    A = CFCUtil_strdup(CFCParser_current_state->text);
+}
+string_literal(A) ::= STRING_LITERAL.
+{
+    A = CFCUtil_strdup(CFCParser_current_state->text);
 }
 
 declarator(A) ::= IDENTIFIER.
@@ -239,5 +265,39 @@ declarator(A) ::= IDENTIFIER.
 param_variable(A) ::= type(B) declarator(C).
 {
     A = (CFCBase*)CFCVariable_new(NULL, NULL, NULL, NULL, C, (CFCType*)B);
+}
+
+param_list(A) ::= LEFT_PAREN RIGHT_PAREN.
+{
+    A = (CFCBase*)CFCParamList_new(false);
+}
+param_list(A) ::= LEFT_PAREN param_list_elems(B) RIGHT_PAREN.
+{
+    A = B;
+}
+param_list(A) ::= LEFT_PAREN param_list_elems(B) COMMA ELLIPSIS RIGHT_PAREN.
+{
+    A = B;
+    CFCParamList_set_variadic((CFCParamList*)A, true);
+}
+param_list_elems(A) ::= param_list_elems(B) COMMA param_variable(C).
+{
+    A = B;
+    CFCParamList_add_param((CFCParamList*)A, (CFCVariable*)C, NULL);
+}
+param_list_elems(A) ::= param_list_elems(B) COMMA param_variable(C) EQUALS scalar_constant(D).
+{
+    A = B;
+    CFCParamList_add_param((CFCParamList*)A, (CFCVariable*)C, D);
+}
+param_list_elems(A) ::= param_variable(B).
+{
+    A = (CFCBase*)CFCParamList_new(false);
+    CFCParamList_add_param((CFCParamList*)A, (CFCVariable*)B, NULL);
+}
+param_list_elems(A) ::= param_variable(B) EQUALS scalar_constant(C).
+{
+    A = (CFCBase*)CFCParamList_new(false);
+    CFCParamList_add_param((CFCParamList*)A, (CFCVariable*)B, C);
 }
 
