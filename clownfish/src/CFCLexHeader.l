@@ -20,8 +20,8 @@
 void
 CFCParseHeader(void *header_parser, int token_type, CFCBase *value,
                CFCParserState *state);
-#define PARSE(token_type, value) \
-    CFCParseHeader(CFCParser_current_parser, token_type, value, \
+#define PARSE(token_type) \
+    CFCParseHeader(CFCParser_current_parser, token_type, NULL, \
         CFCParser_current_state)
 static void
 S_save_yytext() {
@@ -42,72 +42,72 @@ OBJECT_TYPE_SPECIFIER   ([a-z]+[a-z0-9]*_)?[A-Z]+[A-Z0-9]*[a-z]+[A-Za-z0-9]*
 %option yylineno
 
 %%
-const       { PARSE(CFC_TOKENTYPE_CONST, NULL); }
-nullable    { PARSE(CFC_TOKENTYPE_NULLABLE, NULL); } 
-incremented { PARSE(CFC_TOKENTYPE_INCREMENTED, NULL); } 
-decremented { PARSE(CFC_TOKENTYPE_DECREMENTED, NULL); } 
+const       { PARSE(CFC_TOKENTYPE_CONST); }
+nullable    { PARSE(CFC_TOKENTYPE_NULLABLE); } 
+incremented { PARSE(CFC_TOKENTYPE_INCREMENTED); } 
+decremented { PARSE(CFC_TOKENTYPE_DECREMENTED); } 
 
-void       { PARSE(CFC_TOKENTYPE_VOID, NULL); }
-float      { PARSE(CFC_TOKENTYPE_FLOAT, NULL); }
-double     { PARSE(CFC_TOKENTYPE_DOUBLE, NULL); }
-int8_t     { PARSE(CFC_TOKENTYPE_INT8_T, NULL); }
-int16_t    { PARSE(CFC_TOKENTYPE_INT16_T, NULL); }
-int32_t    { PARSE(CFC_TOKENTYPE_INT32_T, NULL); }
-int64_t    { PARSE(CFC_TOKENTYPE_INT64_T, NULL); }
-uint8_t    { PARSE(CFC_TOKENTYPE_UINT8_T, NULL); }
-uint16_t   { PARSE(CFC_TOKENTYPE_UINT16_T, NULL); }
-uint32_t   { PARSE(CFC_TOKENTYPE_UINT32_T, NULL); }
-uint64_t   { PARSE(CFC_TOKENTYPE_UINT64_T, NULL); }
-char       { PARSE(CFC_TOKENTYPE_CHAR, NULL); }
-short      { PARSE(CFC_TOKENTYPE_SHORT, NULL); }
-int        { PARSE(CFC_TOKENTYPE_INT, NULL); }
-long       { PARSE(CFC_TOKENTYPE_LONG, NULL); }
-size_t     { PARSE(CFC_TOKENTYPE_SIZE_T, NULL); }
-bool_t     { PARSE(CFC_TOKENTYPE_BOOL_T, NULL); }
-va_list    { PARSE(CFC_TOKENTYPE_VA_LIST, NULL); }
-true       { PARSE(CFC_TOKENTYPE_TRUE, NULL); }
-false      { PARSE(CFC_TOKENTYPE_FALSE, NULL); }
-NULL       { PARSE(CFC_TOKENTYPE_NULL, NULL); }
+void       { PARSE(CFC_TOKENTYPE_VOID); }
+float      { PARSE(CFC_TOKENTYPE_FLOAT); }
+double     { PARSE(CFC_TOKENTYPE_DOUBLE); }
+int8_t     { PARSE(CFC_TOKENTYPE_INT8_T); }
+int16_t    { PARSE(CFC_TOKENTYPE_INT16_T); }
+int32_t    { PARSE(CFC_TOKENTYPE_INT32_T); }
+int64_t    { PARSE(CFC_TOKENTYPE_INT64_T); }
+uint8_t    { PARSE(CFC_TOKENTYPE_UINT8_T); }
+uint16_t   { PARSE(CFC_TOKENTYPE_UINT16_T); }
+uint32_t   { PARSE(CFC_TOKENTYPE_UINT32_T); }
+uint64_t   { PARSE(CFC_TOKENTYPE_UINT64_T); }
+char       { PARSE(CFC_TOKENTYPE_CHAR); }
+short      { PARSE(CFC_TOKENTYPE_SHORT); }
+int        { PARSE(CFC_TOKENTYPE_INT); }
+long       { PARSE(CFC_TOKENTYPE_LONG); }
+size_t     { PARSE(CFC_TOKENTYPE_SIZE_T); }
+bool_t     { PARSE(CFC_TOKENTYPE_BOOL_T); }
+va_list    { PARSE(CFC_TOKENTYPE_VA_LIST); }
+true       { PARSE(CFC_TOKENTYPE_TRUE); }
+false      { PARSE(CFC_TOKENTYPE_FALSE); }
+NULL       { PARSE(CFC_TOKENTYPE_NULL); }
 [A-Za-z0-9_]+_t { 
                 S_save_yytext();
-                PARSE(CFC_TOKENTYPE_ARBITRARY, NULL); 
+                PARSE(CFC_TOKENTYPE_ARBITRARY); 
            }
 {OBJECT_TYPE_SPECIFIER} {
                 S_save_yytext();
-                PARSE(CFC_TOKENTYPE_OBJECT_TYPE_SPECIFIER, NULL); 
+                PARSE(CFC_TOKENTYPE_OBJECT_TYPE_SPECIFIER); 
            }
-[*]        { PARSE(CFC_TOKENTYPE_ASTERISK, NULL); }
-[\[]       { PARSE(CFC_TOKENTYPE_LEFT_SQUARE_BRACKET, NULL); }
-[\]]       { PARSE(CFC_TOKENTYPE_RIGHT_SQUARE_BRACKET, NULL); }
-[\(]       { PARSE(CFC_TOKENTYPE_LEFT_PAREN, NULL); }
-[\)]       { PARSE(CFC_TOKENTYPE_RIGHT_PAREN, NULL); }
-\.\.\.     { PARSE(CFC_TOKENTYPE_ELLIPSIS, NULL); }
-,          { PARSE(CFC_TOKENTYPE_COMMA, NULL); }
-=          { PARSE(CFC_TOKENTYPE_EQUALS, NULL); }
+[*]        { PARSE(CFC_TOKENTYPE_ASTERISK); }
+[\[]       { PARSE(CFC_TOKENTYPE_LEFT_SQUARE_BRACKET); }
+[\]]       { PARSE(CFC_TOKENTYPE_RIGHT_SQUARE_BRACKET); }
+[\(]       { PARSE(CFC_TOKENTYPE_LEFT_PAREN); }
+[\)]       { PARSE(CFC_TOKENTYPE_RIGHT_PAREN); }
+\.\.\.     { PARSE(CFC_TOKENTYPE_ELLIPSIS); }
+,          { PARSE(CFC_TOKENTYPE_COMMA); }
+=          { PARSE(CFC_TOKENTYPE_EQUALS); }
 -?0x[0-9A-Fa-f]+ {
                 S_save_yytext();
-                PARSE(CFC_TOKENTYPE_HEX_LITERAL, NULL); 
+                PARSE(CFC_TOKENTYPE_HEX_LITERAL); 
            }
 -?[0-9]+   {
                 S_save_yytext();
-                PARSE(CFC_TOKENTYPE_INTEGER_LITERAL, NULL); 
+                PARSE(CFC_TOKENTYPE_INTEGER_LITERAL); 
            }
 -?[ ]*[0-9+].[0-9]+ {
                 S_save_yytext();
-                PARSE(CFC_TOKENTYPE_FLOAT_LITERAL, NULL); 
+                PARSE(CFC_TOKENTYPE_FLOAT_LITERAL); 
            }
 \"([^\"\\]|\\.)*\" {
                 S_save_yytext();
-                PARSE(CFC_TOKENTYPE_STRING_LITERAL, NULL); 
+                PARSE(CFC_TOKENTYPE_STRING_LITERAL); 
            }
 [a-zA-Z_][a-zA-Z0-9_]* { 
                 S_save_yytext();
-                PARSE(CFC_TOKENTYPE_IDENTIFIER, NULL); 
+                PARSE(CFC_TOKENTYPE_IDENTIFIER); 
            }
            
 "/**"([^*]|"*"[^/])*"*/" {  /* Parse docucomments. */
                 S_save_yytext();
-                PARSE(CFC_TOKENTYPE_DOCUCOMMENT, NULL); 
+                PARSE(CFC_TOKENTYPE_DOCUCOMMENT); 
            }
 "/*"([^*]|"*"[^/])*"*/"  { /* Skip ordinary comments. */ }
 
