@@ -66,8 +66,8 @@ $var = Clownfish::Variable->new(
 );
 is( $var->global_c, 'neato_Foo* neato_LobClaw_foo', "global_c" );
 
-isa_ok( $parser->var_declaration_statement($_)->{declared},
-    "Clownfish::Variable", "var_declaration_statement: $_" )
+isa_ok( $parser->parse($_), "Clownfish::Variable",
+    "var_declaration_statement: $_" )
     for (
     'parcel int foo;',
     'private Obj *obj;',

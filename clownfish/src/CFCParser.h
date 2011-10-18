@@ -31,6 +31,8 @@ struct CFCParserState
     int errors;
     char *text;
     size_t cap;
+    char *class_name;
+    char *class_cnick;
 };
 typedef struct CFCParserState CFCParserState;
 
@@ -55,6 +57,18 @@ CFCParser_set_parcel(struct CFCParcel *parcel);
 
 struct CFCParcel*
 CFCParser_get_parcel(void);
+
+void
+CFCParser_set_class_name(CFCParserState *state, const char *class_name);
+
+const char*
+CFCParser_get_class_name(CFCParserState *state);
+
+void
+CFCParser_set_class_cnick(CFCParserState *state, const char *class_cnick);
+
+const char*
+CFCParser_get_class_cnick(CFCParserState *state);
 
 #ifdef __cplusplus
 }

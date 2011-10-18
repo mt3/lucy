@@ -105,3 +105,35 @@ CFCParser_get_parcel(void) {
     return CFCParser_current_parcel;
 }
 
+void
+CFCParser_set_class_name(CFCParserState *state, const char *class_name) {
+    FREEMEM(state->class_name);
+    if (class_name) {
+        state->class_name = CFCUtil_strdup(class_name);
+    }
+    else {
+        state->class_name = NULL;
+    }
+}
+
+const char*
+CFCParser_get_class_name(CFCParserState *state) {
+    return state->class_name;
+}
+
+void
+CFCParser_set_class_cnick(CFCParserState *state, const char *class_cnick) {
+    FREEMEM(state->class_cnick);
+    if (class_cnick) {
+        state->class_cnick = CFCUtil_strdup(class_cnick);
+    }
+    else {
+        state->class_cnick = NULL;
+    }
+}
+
+const char*
+CFCParser_get_class_cnick(CFCParserState *state) {
+    return state->class_cnick;
+}
+

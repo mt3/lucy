@@ -71,17 +71,61 @@ result ::= param_variable(A).         { state->result = A; }
 result ::= docucomment(A).            { state->result = A; }
 result ::= parcel_definition(A).      { state->result = A; }
 result ::= cblock(A).                 { state->result = A; }
+result ::= var_declaration_statement(A). { state->result = A; }
 
-parcel_definition(A) ::= PARCEL class_name(B) SEMICOLON.
+parcel_definition(A) ::= exposure_specifier(B) class_name(C) SEMICOLON.
 {
-    A = (CFCBase*)CFCParcel_singleton(B, NULL);
+    if (strcmp(B, "parcel") != 0) {
+        /* Instead of this kludgy post-parse error trigger, we should require
+         * PARCEL in this production as opposed to exposure_specifier.
+         * However, that causes a parsing conflict because the keyword
+         * "parcel" has two meanings in the Clownfish header language (parcel
+         * declaration and exposure specifier). */
+         CFCUtil_die("A syntax error was detected when parsing '%s'", B);
+    }
+    A = (CFCBase*)CFCParcel_singleton(C, NULL);
     CFCParser_set_parcel((CFCParcel*)A);
 }
 
-parcel_definition(A) ::= PARCEL class_name(B) cnick(C) SEMICOLON.
+parcel_definition(A) ::= exposure_specifier(B) class_name(C) cnick(D) SEMICOLON.
 {
-    A = (CFCBase*)CFCParcel_singleton(B, C);
+    if (strcmp(B, "parcel") != 0) {
+         CFCUtil_die("A syntax error was detected when parsing '%s'", B);
+    }
+    A = (CFCBase*)CFCParcel_singleton(C, D);
     CFCParser_set_parcel((CFCParcel*)A);
+}
+
+
+var_declaration_statement(A) ::= type(B) declarator(C) SEMICOLON.
+{
+    A = (CFCBase*)CFCVariable_new(CFCParser_get_parcel(), "parcel", 
+                                  CFCParser_get_class_name(state),
+                                  CFCParser_get_class_cnick(state), C,
+                                  (CFCType*)B);
+}
+var_declaration_statement(A) ::= exposure_specifier(B) type(C) declarator(D) SEMICOLON.
+{
+    A = (CFCBase*)CFCVariable_new(CFCParser_get_parcel(), B,
+                                  CFCParser_get_class_name(state),
+                                  CFCParser_get_class_cnick(state), D,
+                                  (CFCType*)C);
+}
+
+/* Discard INERT for now. */
+var_declaration_statement(A) ::= INERT type(B) declarator(C) SEMICOLON.
+{
+    A = (CFCBase*)CFCVariable_new(CFCParser_get_parcel(), "parcel", 
+                                  CFCParser_get_class_name(state),
+                                  CFCParser_get_class_cnick(state), C,
+                                  (CFCType*)B);
+}
+var_declaration_statement(A) ::= exposure_specifier(B) INERT type(C) declarator(D) SEMICOLON.
+{
+    A = (CFCBase*)CFCVariable_new(CFCParser_get_parcel(), B,
+                                  CFCParser_get_class_name(state),
+                                  CFCParser_get_class_cnick(state), D,
+                                  (CFCType*)C);
 }
 
 type(A) ::= simple_type(B).            { A = B; }
@@ -115,6 +159,7 @@ void_type(A) ::= void_type_specifier.
     A = (CFCBase*)CFCType_new_void(false);
 }
 
+%type exposure_specifier            {char*}
 %type float_type_specifier          {const char*}
 %type integer_type_specifier        {const char*}
 %type object_type_specifier         {char*}
@@ -132,6 +177,7 @@ void_type(A) ::= void_type_specifier.
 %type class_name                    {char*}
 %type cnick                         {char*}
 %type blob                          {char*}
+%destructor exposure_specifier          { FREEMEM($$); }
 %destructor float_type_specifier        { }
 %destructor integer_type_specifier      { }
 %destructor object_type_specifier       { FREEMEM($$); }
@@ -168,6 +214,11 @@ integer_type_specifier(A) ::= SIZE_T.    { A = KW_SIZE_T; }
 integer_type_specifier(A) ::= BOOL_T.    { A = KW_BOOL_T; }
 float_type_specifier(A) ::= FLOAT.   { A = KW_FLOAT; }
 float_type_specifier(A) ::= DOUBLE.  { A = KW_DOUBLE; }
+
+exposure_specifier(A) ::= PUBLIC.  { A = CFCUtil_strdup("public"); }
+exposure_specifier(A) ::= PRIVATE. { A = CFCUtil_strdup("private"); }
+exposure_specifier(A) ::= PARCEL.  { A = CFCUtil_strdup("parcel"); }
+exposure_specifier(A) ::= LOCAL.   { A = CFCUtil_strdup("local"); }
 
 integer_type(A) ::= integer_type_specifier(B).
 {
