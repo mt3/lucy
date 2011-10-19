@@ -150,7 +150,7 @@ parcel_definition(A) ::= exposure_specifier(B) class_name(C) cnick(D) SEMICOLON.
 var_declaration_statement(A) ::= 
     type(D) declarator(E) SEMICOLON.
 {
-    A = S_new_var(state, NULL, NULL, D, E);
+    A = S_new_var(state, "parcel", NULL, D, E);
 }
 var_declaration_statement(A) ::= 
     exposure_specifier(B)
@@ -162,7 +162,7 @@ var_declaration_statement(A) ::=
     declaration_modifier_list(C)
     type(D) declarator(E) SEMICOLON.
 {
-    A = S_new_var(state, NULL, C, D, E);
+    A = S_new_var(state, "parcel", C, D, E);
 }
 var_declaration_statement(A) ::= 
     exposure_specifier(B)
