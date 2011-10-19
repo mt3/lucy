@@ -25,10 +25,8 @@ typedef struct CFCParser CFCParser;
 struct CFCBase;
 struct CFCParcel;
 
-typedef struct CFCParserState CFCParserState;
-
-extern CFCParserState *CFCParser_current_state;
-extern void           *CFCParser_current_parser;
+extern CFCParser *CFCParser_current_state;
+extern void      *CFCParser_current_parser;
 
 CFCParser*
 CFCParser_new(void);
@@ -43,16 +41,16 @@ struct CFCBase*
 CFCParser_parse(CFCParser *self, const char *string);
 
 void
-CFCParser_set_result(CFCParserState *self, struct CFCBase *result);
+CFCParser_set_result(CFCParser *self, struct CFCBase *result);
 
 void
-CFCParser_set_errors(CFCParserState *self, int errors);
+CFCParser_set_errors(CFCParser *self, int errors);
 
 void
-CFCParser_set_text(CFCParserState *self, const char *text, size_t len);
+CFCParser_set_text(CFCParser *self, const char *text, size_t len);
 
 const char*
-CFCParser_get_text(CFCParserState *state);
+CFCParser_get_text(CFCParser *self);
 
 void
 CFCParser_set_parcel(struct CFCParcel *parcel);
@@ -61,16 +59,16 @@ struct CFCParcel*
 CFCParser_get_parcel(void);
 
 void
-CFCParser_set_class_name(CFCParserState *state, const char *class_name);
+CFCParser_set_class_name(CFCParser *self, const char *class_name);
 
 const char*
-CFCParser_get_class_name(CFCParserState *state);
+CFCParser_get_class_name(CFCParser *self);
 
 void
-CFCParser_set_class_cnick(CFCParserState *state, const char *class_cnick);
+CFCParser_set_class_cnick(CFCParser *self, const char *class_cnick);
 
 const char*
-CFCParser_get_class_cnick(CFCParserState *state);
+CFCParser_get_class_cnick(CFCParser *self);
 
 #ifdef __cplusplus
 }

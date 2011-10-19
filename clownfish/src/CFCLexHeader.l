@@ -20,7 +20,7 @@
 
     void
     CFCParseHeader(void *header_parser, int token_type, CFCBase *value,
-                   CFCParserState *state);
+                   CFCParser *state);
     /* Invoke Lemon-generated parser. */
     #define PARSE(token_type) \
         CFCParseHeader(CFCParser_current_parser, token_type, NULL, \

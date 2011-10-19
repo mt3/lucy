@@ -35,7 +35,7 @@ void*
 CFCParseHeaderAlloc(void * (*allocate)(size_t));
 void
 CFCParseHeader(void *header_parser, int token_type, CFCBase *value,
-               CFCParserState *state);
+               CFCParser *state);
 void
 CFCParseHeaderFree(void *header_parser, void(*freemem)(void*));
 void
@@ -44,10 +44,6 @@ CFCParseHeaderTrace(FILE *trace, char *line_prefix);
 struct CFCParser {
     CFCBase base;
     void *header_parser;
-};
-
-struct CFCParserState 
-{
     struct CFCBase *result;
     int errors;
     char *text;
@@ -78,8 +74,8 @@ CFCParser_destroy(CFCParser *self) {
     CFCBase_destroy((CFCBase*)self);
 }
 
-static CFCParserState state;
-CFCParserState *CFCParser_current_state  = &state;
+static CFCParser state;
+CFCParser *CFCParser_current_state  = &state;
 void           *CFCParser_current_parser = NULL;
 CFCParcel      *CFCParser_current_parcel = NULL;
 
@@ -104,20 +100,20 @@ CFCParser_parse(CFCParser *self, const char *string) {
 }
 
 void
-CFCParser_set_result(CFCParserState *self, CFCBase *result)
+CFCParser_set_result(CFCParser *self, CFCBase *result)
 {
     CFCBase_decref(self->result);
     self->result = CFCBase_incref(result);
 }
 
 void
-CFCParser_set_errors(CFCParserState *self, int errors)
+CFCParser_set_errors(CFCParser *self, int errors)
 {
     self->errors = errors;
 }
 
 void
-CFCParser_set_text(CFCParserState *self, const char *text, size_t len) {
+CFCParser_set_text(CFCParser *self, const char *text, size_t len) {
     if (text) {
         if (len >= self->cap) {
             self->cap = len + 1;
@@ -134,7 +130,7 @@ CFCParser_set_text(CFCParserState *self, const char *text, size_t len) {
 }
 
 const char*
-CFCParser_get_text(CFCParserState *self) {
+CFCParser_get_text(CFCParser *self) {
     return self->text;
 }
 
@@ -151,34 +147,34 @@ CFCParser_get_parcel(void) {
 }
 
 void
-CFCParser_set_class_name(CFCParserState *state, const char *class_name) {
-    FREEMEM(state->class_name);
+CFCParser_set_class_name(CFCParser *self, const char *class_name) {
+    FREEMEM(self->class_name);
     if (class_name) {
-        state->class_name = CFCUtil_strdup(class_name);
+        self->class_name = CFCUtil_strdup(class_name);
     }
     else {
-        state->class_name = NULL;
+        self->class_name = NULL;
     }
 }
 
 const char*
-CFCParser_get_class_name(CFCParserState *state) {
-    return state->class_name;
+CFCParser_get_class_name(CFCParser *self) {
+    return self->class_name;
 }
 
 void
-CFCParser_set_class_cnick(CFCParserState *state, const char *class_cnick) {
-    FREEMEM(state->class_cnick);
+CFCParser_set_class_cnick(CFCParser *self, const char *class_cnick) {
+    FREEMEM(self->class_cnick);
     if (class_cnick) {
-        state->class_cnick = CFCUtil_strdup(class_cnick);
+        self->class_cnick = CFCUtil_strdup(class_cnick);
     }
     else {
-        state->class_cnick = NULL;
+        self->class_cnick = NULL;
     }
 }
 
 const char*
-CFCParser_get_class_cnick(CFCParserState *state) {
-    return state->class_cnick;
+CFCParser_get_class_cnick(CFCParser *self) {
+    return self->class_cnick;
 }
 

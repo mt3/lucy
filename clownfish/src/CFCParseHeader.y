@@ -20,7 +20,7 @@
 %token_destructor { CFCBase_decref((CFCBase*)$$); }
 %token_prefix CFC_TOKENTYPE_
 
-%extra_argument { CFCParserState *state }
+%extra_argument { CFCParser *state }
 
 %include {
 #include <stdio.h>
