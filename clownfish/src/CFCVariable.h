@@ -28,13 +28,13 @@ struct CFCType;
 CFCVariable*
 CFCVariable_new(struct CFCParcel *parcel, const char *exposure,
                 const char *class_name, const char *class_cnick,
-                const char *micro_sym, struct CFCType *type);
+                const char *micro_sym, struct CFCType *type, int inert);
 
 CFCVariable*
 CFCVariable_init(CFCVariable *self, struct CFCParcel *parcel,
                  const char *exposure, const char *class_name,
                  const char *class_cnick, const char *micro_sym,
-                 struct CFCType *type);
+                 struct CFCType *type, int inert);
 
 void
 CFCVariable_destroy(CFCVariable *self);

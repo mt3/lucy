@@ -29,6 +29,7 @@ our %new_PARAMS = (
     exposure    => 'local',
     class_name  => undef,
     class_cnick => undef,
+    inert       => undef,
 );
 
 sub new {
@@ -38,7 +39,7 @@ sub new {
     $args{parcel} = Clownfish::Parcel->acquire( $args{parcel} );
     my $package = ref($either) || $either;
     return $package->_new(
-        @args{qw( parcel exposure class_name class_cnick micro_sym type )} );
+        @args{qw( parcel exposure class_name class_cnick micro_sym type inert )} );
 }
 
 1;

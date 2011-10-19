@@ -1624,7 +1624,7 @@ OUTPUT: RETVAL
 MODULE = Clownfish   PACKAGE = Clownfish::Variable
 
 SV*
-_new(klass, parcel, exposure, class_name_sv, class_cnick_sv, micro_sym_sv, type_sv)
+_new(klass, parcel, exposure, class_name_sv, class_cnick_sv, micro_sym_sv, type_sv, inert_sv)
     const char *klass;
     CFCParcel *parcel;
     const char *exposure;
@@ -1632,6 +1632,7 @@ _new(klass, parcel, exposure, class_name_sv, class_cnick_sv, micro_sym_sv, type_
     SV *class_cnick_sv;
     SV *micro_sym_sv;
     SV *type_sv;
+    SV *inert_sv;
 CODE:
     const char *class_name  = SvOK(class_name_sv)
                               ? SvPV_nolen(class_name_sv)
@@ -1642,6 +1643,8 @@ CODE:
     const char *micro_sym   = SvOK(micro_sym_sv)
                               ? SvPV_nolen(micro_sym_sv)
                               : NULL;
+    int inert               = SvOK(inert_sv)
+                              ? !!SvTRUE(inert_sv) : 0;
     CFCType *type = NULL;
     if (SvOK(type_sv) && sv_derived_from(type_sv, "Clownfish::Type")) {
         IV objint = SvIV((SV*)SvRV(type_sv));
@@ -1651,7 +1654,7 @@ CODE:
         croak("Param 'type' is not a Clownfish::Type");
     }
     CFCVariable *self = CFCVariable_new(parcel, exposure, class_name,
-                                        class_cnick, micro_sym, type);
+                                        class_cnick, micro_sym, type, inert);
     RETVAL = S_cfcbase_to_perlref(self);
     CFCBase_decref((CFCBase*)self);
 OUTPUT: RETVAL

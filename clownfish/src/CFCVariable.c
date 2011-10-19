@@ -40,23 +40,24 @@ struct CFCVariable {
     char *local_c;
     char *global_c;
     char *local_dec;
+    int   inert;
 };
 
 CFCVariable*
 CFCVariable_new(struct CFCParcel *parcel, const char *exposure,
                 const char *class_name, const char *class_cnick,
-                const char *micro_sym, struct CFCType *type) {
+                const char *micro_sym, struct CFCType *type, int inert) {
     CFCVariable *self = (CFCVariable*)CFCBase_allocate(sizeof(CFCVariable),
                                                        "Clownfish::Variable");
     return CFCVariable_init(self, parcel, exposure, class_name, class_cnick,
-                            micro_sym, type);
+                            micro_sym, type, inert);
 }
 
 CFCVariable*
 CFCVariable_init(CFCVariable *self, struct CFCParcel *parcel,
                  const char *exposure, const char *class_name,
                  const char *class_cnick, const char *micro_sym,
-                 struct CFCType *type) {
+                 struct CFCType *type, int inert) {
     // Validate params.
     CFCUTIL_NULL_CHECK(type);
     if (!parcel) {
@@ -69,8 +70,9 @@ CFCVariable_init(CFCVariable *self, struct CFCParcel *parcel,
     CFCSymbol_init((CFCSymbol*)self, parcel, real_exposure, class_name,
                    class_cnick, micro_sym);
 
-    // Assign type.
+    // Assign type, inert.
     self->type = (CFCType*)CFCBase_incref((CFCBase*)type);
+    self->inert = !!inert;
 
     // Cache various C string representations.
     const char *type_str = CFCType_to_c(type);
@@ -117,6 +119,11 @@ CFCVariable_equals(CFCVariable *self, CFCVariable *other) {
 CFCType*
 CFCVariable_get_type(CFCVariable *self) {
     return self->type;
+}
+
+int
+CFCVariable_inert(CFCVariable *self) {
+    return self->inert;
 }
 
 const char*

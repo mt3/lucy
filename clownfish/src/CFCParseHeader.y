@@ -53,11 +53,17 @@ static const char KW_DOUBLE[]   = "double";
 static CFCBase*
 S_new_var(CFCParser *state, const char *exposure, const char *modifiers,
           CFCBase *type, const char *name) {
-    (void)modifiers; /* Discard INERT for now. */
+    int inert = false;
+    if (modifiers) {
+        if (strcmp(modifiers, "inert") != 0) {
+            CFCUtil_die("Illegal variable modifiers: '%s'", modifiers);
+        }
+        inert = true;
+    }
     return (CFCBase*)CFCVariable_new(CFCParser_get_parcel(), exposure, 
                                      CFCParser_get_class_name(state),
                                      CFCParser_get_class_cnick(state), name,
-                                     (CFCType*)type);
+                                     (CFCType*)type, inert);
 }
 
 static CFCBase*
@@ -462,8 +468,7 @@ declarator(A) ::= IDENTIFIER.
 
 param_variable(A) ::= type(B) declarator(C).
 {
-    A = (CFCBase*)CFCVariable_new(CFCParser_get_parcel(), NULL, NULL, 
-                                  NULL, C, (CFCType*)B);
+    A = S_new_var(state, NULL, NULL, B, C);
 }
 
 param_list(A) ::= LEFT_PAREN RIGHT_PAREN.
