@@ -51,6 +51,16 @@ static const char KW_FLOAT[]    = "float";
 static const char KW_DOUBLE[]   = "double";
 
 static CFCBase*
+S_new_var(CFCParser *state, const char *exposure, const char *modifiers,
+          CFCBase *type, const char *name) {
+    (void)modifiers; /* Discard INERT for now. */
+    return (CFCBase*)CFCVariable_new(CFCParser_get_parcel(), exposure, 
+                                     CFCParser_get_class_name(state),
+                                     CFCParser_get_class_cnick(state), name,
+                                     (CFCType*)type);
+}
+
+static CFCBase*
 S_new_sub(CFCParser *state, CFCBase *docucomment, 
           const char *exposure, const char *declaration_modifier_list,
           CFCBase *type, const char *name, CFCBase *param_list) {
@@ -131,36 +141,29 @@ parcel_definition(A) ::= exposure_specifier(B) class_name(C) cnick(D) SEMICOLON.
     CFCParser_set_parcel((CFCParcel*)A);
 }
 
-
-var_declaration_statement(A) ::= type(B) declarator(C) SEMICOLON.
+var_declaration_statement(A) ::= 
+    type(D) declarator(E) SEMICOLON.
 {
-    A = (CFCBase*)CFCVariable_new(CFCParser_get_parcel(), "parcel", 
-                                  CFCParser_get_class_name(state),
-                                  CFCParser_get_class_cnick(state), C,
-                                  (CFCType*)B);
+    A = S_new_var(state, "parcel", NULL, D, E);
 }
-var_declaration_statement(A) ::= exposure_specifier(B) type(C) declarator(D) SEMICOLON.
+var_declaration_statement(A) ::= 
+    exposure_specifier(B)
+    type(D) declarator(E) SEMICOLON.
 {
-    A = (CFCBase*)CFCVariable_new(CFCParser_get_parcel(), B,
-                                  CFCParser_get_class_name(state),
-                                  CFCParser_get_class_cnick(state), D,
-                                  (CFCType*)C);
+    A = S_new_var(state, B, NULL, D, E);
 }
-
-/* Discard INERT for now. */
-var_declaration_statement(A) ::= declaration_modifier_list type(B) declarator(C) SEMICOLON.
+var_declaration_statement(A) ::= 
+    declaration_modifier_list(C)
+    type(D) declarator(E) SEMICOLON.
 {
-    A = (CFCBase*)CFCVariable_new(CFCParser_get_parcel(), "parcel", 
-                                  CFCParser_get_class_name(state),
-                                  CFCParser_get_class_cnick(state), C,
-                                  (CFCType*)B);
+    A = S_new_var(state, "parcel", C, D, E);
 }
-var_declaration_statement(A) ::= exposure_specifier(B) declaration_modifier_list type(C) declarator(D) SEMICOLON.
+var_declaration_statement(A) ::= 
+    exposure_specifier(B)
+    declaration_modifier_list(C)
+    type(D) declarator(E) SEMICOLON.
 {
-    A = (CFCBase*)CFCVariable_new(CFCParser_get_parcel(), B,
-                                  CFCParser_get_class_name(state),
-                                  CFCParser_get_class_cnick(state), D,
-                                  (CFCType*)C);
+    A = S_new_var(state, B, C, D, E);
 }
 
 subroutine_declaration_statement(A) ::= 
