@@ -52,7 +52,7 @@ static const char KW_DOUBLE[]   = "double";
 }
 
 %syntax_error {
-    state->errors = true;
+    CFCParser_set_errors(state, true);
     CFCParser_set_text(state, NULL, 0);
 }
 

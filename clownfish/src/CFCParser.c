@@ -101,6 +101,12 @@ CFCParser_set_result(CFCParserState *self, CFCBase *result)
 }
 
 void
+CFCParser_set_errors(CFCParserState *self, int errors)
+{
+    self->errors = errors;
+}
+
+void
 CFCParser_set_text(CFCParserState *self, const char *text, size_t len) {
     if (text) {
         if (len >= self->cap) {
