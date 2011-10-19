@@ -25,15 +25,6 @@ typedef struct CFCParser CFCParser;
 struct CFCBase;
 struct CFCParcel;
 
-struct CFCParserState 
-{
-    struct CFCBase *result;
-    int errors;
-    char *text;
-    size_t cap;
-    char *class_name;
-    char *class_cnick;
-};
 typedef struct CFCParserState CFCParserState;
 
 extern CFCParserState *CFCParser_current_state;

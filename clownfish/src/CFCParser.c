@@ -46,6 +46,16 @@ struct CFCParser {
     void *header_parser;
 };
 
+struct CFCParserState 
+{
+    struct CFCBase *result;
+    int errors;
+    char *text;
+    size_t cap;
+    char *class_name;
+    char *class_cnick;
+};
+
 CFCParser*
 CFCParser_new(void) {
     CFCParser *self = (CFCParser*)CFCBase_allocate(sizeof(CFCParser),
