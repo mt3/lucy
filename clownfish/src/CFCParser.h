@@ -52,10 +52,13 @@ struct CFCBase*
 CFCParser_parse(CFCParser *self, const char *string);
 
 void
+CFCParser_set_result(CFCParserState *self, struct CFCBase *result);
+
+void
 CFCParser_set_text(CFCParserState *self, const char *text, size_t len);
 
 const char*
-CFCParser_get_text(CFCParserState *self);
+CFCParser_get_text(CFCParserState *state);
 
 void
 CFCParser_set_parcel(struct CFCParcel *parcel);

@@ -61,13 +61,13 @@ static const char KW_DOUBLE[]   = "double";
 }
 
 /* Temporary. */
-result ::= type(A).                   { state->result = A; }
-result ::= param_list(A).             { state->result = A; }
-result ::= param_variable(A).         { state->result = A; }
-result ::= docucomment(A).            { state->result = A; }
-result ::= parcel_definition(A).      { state->result = A; }
-result ::= cblock(A).                 { state->result = A; }
-result ::= var_declaration_statement(A). { state->result = A; }
+result ::= type(A).                      { CFCParser_set_result(state, A); }
+result ::= param_list(A).                { CFCParser_set_result(state, A); }
+result ::= param_variable(A).            { CFCParser_set_result(state, A); }
+result ::= docucomment(A).               { CFCParser_set_result(state, A); }
+result ::= parcel_definition(A).         { CFCParser_set_result(state, A); }
+result ::= cblock(A).                    { CFCParser_set_result(state, A); }
+result ::= var_declaration_statement(A). { CFCParser_set_result(state, A); }
 
 parcel_definition(A) ::= exposure_specifier(B) class_name(C) SEMICOLON.
 {

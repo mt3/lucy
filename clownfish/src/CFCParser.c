@@ -94,6 +94,13 @@ CFCParser_parse(CFCParser *self, const char *string) {
 }
 
 void
+CFCParser_set_result(CFCParserState *self, CFCBase *result)
+{
+    CFCBase_decref(self->result);
+    self->result = CFCBase_incref(result);
+}
+
+void
 CFCParser_set_text(CFCParserState *self, const char *text, size_t len) {
     if (text) {
         if (len >= self->cap) {
