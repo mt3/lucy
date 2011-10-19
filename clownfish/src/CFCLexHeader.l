@@ -31,13 +31,7 @@
         S_save_and_parse(token_type)
     static void
     S_save_and_parse(int token_type) {
-        if (yyleng >= CFCParser_current_state->cap) {
-            CFCParser_current_state->text
-                = REALLOCATE(CFCParser_current_state->text, yyleng + 1);
-            CFCParser_current_state->cap = yyleng + 1;
-        }
-        strncpy(CFCParser_current_state->text, yytext, yyleng);
-        CFCParser_current_state->text[yyleng] = '\0';
+        CFCParser_set_text(CFCParser_current_state, yytext, yyleng);
         PARSE(token_type);
     }
 %}

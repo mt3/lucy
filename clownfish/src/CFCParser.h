@@ -51,6 +51,11 @@ CFCParser_destroy(CFCParser *self);
 struct CFCBase*
 CFCParser_parse(CFCParser *self, const char *string);
 
+void
+CFCParser_set_text(CFCParserState *self, const char *text, size_t len);
+
+const char*
+CFCParser_get_text(CFCParserState *self);
 
 void
 CFCParser_set_parcel(struct CFCParcel *parcel);

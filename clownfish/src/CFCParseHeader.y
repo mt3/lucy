@@ -53,15 +53,11 @@ static const char KW_DOUBLE[]   = "double";
 
 %syntax_error {
     state->errors = true;
-    FREEMEM(state->text);
-    state->text = NULL;
-    state->cap = 0;
+    CFCParser_set_text(state, NULL, 0);
 }
 
 %parse_accept {
-    FREEMEM(state->text);
-    state->text = NULL;
-    state->cap = 0;
+    CFCParser_set_text(state, NULL, 0);
 }
 
 /* Temporary. */
@@ -248,7 +244,7 @@ va_list_type(A) ::= va_list_specifier.
 arbitrary_type(A) ::= ARBITRARY.
 {
     A = (CFCBase*)CFCType_new_arbitrary(CFCParser_get_parcel(),
-                                        CFCParser_current_state->text);
+                                        CFCParser_get_text(state));
 }
 
 object_type(A) ::= object_type_specifier(B) ASTERISK.
@@ -263,12 +259,12 @@ object_type(A) ::= type_qualifier_list(B) object_type_specifier(C) ASTERISK.
 
 object_type_specifier(A) ::= CLASS_NAME_COMPONENT.
 {
-    A = CFCUtil_strdup(CFCParser_current_state->text);
+    A = CFCUtil_strdup(CFCParser_get_text(state));
 }
 
 object_type_specifier(A) ::= PREFIXED_OBJECT_TYPE_SPECIFIER.
 {
-    A = CFCUtil_strdup(CFCParser_current_state->text);
+    A = CFCUtil_strdup(CFCParser_get_text(state));
 }
 
 type_qualifier(A) ::= CONST.       { A = CFCTYPE_CONST; }
@@ -319,24 +315,24 @@ scalar_constant(A) ::= NULL.     { A = CFCUtil_strdup("NULL"); }
 
 integer_literal(A) ::= INTEGER_LITERAL.
 {
-    A = CFCUtil_strdup(CFCParser_current_state->text);
+    A = CFCUtil_strdup(CFCParser_get_text(state));
 }
 float_literal(A) ::= FLOAT_LITERAL.
 {
-    A = CFCUtil_strdup(CFCParser_current_state->text);
+    A = CFCUtil_strdup(CFCParser_get_text(state));
 }
 hex_literal(A) ::= HEX_LITERAL.
 {
-    A = CFCUtil_strdup(CFCParser_current_state->text);
+    A = CFCUtil_strdup(CFCParser_get_text(state));
 }
 string_literal(A) ::= STRING_LITERAL.
 {
-    A = CFCUtil_strdup(CFCParser_current_state->text);
+    A = CFCUtil_strdup(CFCParser_get_text(state));
 }
 
 declarator(A) ::= IDENTIFIER.
 {
-    A = CFCUtil_strdup(CFCParser_current_state->text);
+    A = CFCUtil_strdup(CFCParser_get_text(state));
 }
 
 param_variable(A) ::= type(B) declarator(C).
@@ -381,22 +377,22 @@ param_list_elems(A) ::= param_variable(B) EQUALS scalar_constant(C).
 
 docucomment(A) ::= DOCUCOMMENT.
 {
-    A = (CFCBase*)CFCDocuComment_parse(CFCParser_current_state->text);
+    A = (CFCBase*)CFCDocuComment_parse(CFCParser_get_text(state));
 }
 
 class_name(A) ::= CLASS_NAME_MULTI.
 {
-    A = CFCUtil_strdup(CFCParser_current_state->text);
+    A = CFCUtil_strdup(CFCParser_get_text(state));
 }
 
 class_name(A) ::= CLASS_NAME_COMPONENT.
 {
-    A = CFCUtil_strdup(CFCParser_current_state->text);
+    A = CFCUtil_strdup(CFCParser_get_text(state));
 }
 
 cnick(A) ::= CNICK CLASS_NAME_COMPONENT.
 {
-    A = CFCUtil_strdup(CFCParser_current_state->text);
+    A = CFCUtil_strdup(CFCParser_get_text(state));
 }
 
 cblock(A) ::= CBLOCK_START blob(B) CBLOCK_CLOSE.
@@ -406,5 +402,5 @@ cblock(A) ::= CBLOCK_START blob(B) CBLOCK_CLOSE.
 
 blob(A) ::= BLOB.
 {
-    A = CFCUtil_strdup(CFCParser_current_state->text);
+    A = CFCUtil_strdup(CFCParser_get_text(state));
 }

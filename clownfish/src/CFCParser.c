@@ -94,6 +94,28 @@ CFCParser_parse(CFCParser *self, const char *string) {
 }
 
 void
+CFCParser_set_text(CFCParserState *self, const char *text, size_t len) {
+    if (text) {
+        if (len >= self->cap) {
+            self->cap = len + 1;
+            self->text = REALLOCATE(self->text, self->cap);
+        }
+        memcpy(self->text, text, len);
+        self->text[len] = '\0';
+    }
+    else {
+        FREEMEM(self->text);
+        self->cap = 0;
+        self->text = NULL;
+    }
+}
+
+const char*
+CFCParser_get_text(CFCParserState *self) {
+    return self->text;
+}
+
+void
 CFCParser_set_parcel(CFCParcel *parcel) {
     CFCBase_incref((CFCBase*)parcel);
     CFCBase_decref((CFCBase*)CFCParser_current_parcel);
