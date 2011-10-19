@@ -2075,6 +2075,20 @@ set_parcel(unused, parcel)
 PPCODE:
     CFCParser_set_parcel(parcel);
 
+void
+set_class_name(self, class_name)
+    CFCParser  *self;
+    const char *class_name;
+PPCODE:
+    CFCParser_set_class_name(self, class_name);
+
+void
+set_class_cnick(self, class_cnick)
+    CFCParser  *self;
+    const char *class_cnick;
+PPCODE:
+    CFCParser_set_class_cnick(self, class_cnick);
+
 SV*
 get_parcel(...)
 CODE:

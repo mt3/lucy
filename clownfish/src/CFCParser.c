@@ -88,14 +88,6 @@ CFCParser *CFCParser_current_state  = NULL;
 void      *CFCParser_current_parser = NULL;
 CFCParcel *CFCParser_current_parcel = NULL;
 
-static void
-S_zero_out_parser(CFCParser *self) {
-    CFCParser_set_text(self, "", 0);
-    CFCParser_set_class_name(self, NULL);
-    CFCParser_set_class_cnick(self, NULL);
-    self->errors = false;
-}
-
 CFCBase*
 CFCParser_parse(CFCParser *self, const char *string) {
     // Make Lemon-based parser and parser state available from Flex-based scanner.
@@ -103,7 +95,7 @@ CFCParser_parse(CFCParser *self, const char *string) {
     CFCParser_current_parser = self->header_parser;
 
     // Zero out, then parse.
-    S_zero_out_parser(self);
+    self->errors = false;
     YY_BUFFER_STATE buffer = yy_scan_bytes(string, (int)strlen(string));
     yylex();
     yy_delete_buffer(buffer);
