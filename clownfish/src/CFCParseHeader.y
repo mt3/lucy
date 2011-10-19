@@ -49,7 +49,45 @@ static const char KW_SIZE_T[]   = "size_t";
 static const char KW_BOOL_T[]   = "bool_t";
 static const char KW_FLOAT[]    = "float";
 static const char KW_DOUBLE[]   = "double";
+
+static CFCBase*
+S_new_sub(CFCParser *state, CFCBase *docucomment, 
+          const char *exposure, const char *declaration_modifier_list,
+          CFCBase *type, const char *name, CFCBase *param_list) {
+    CFCParcel  *parcel      = CFCParser_get_parcel();
+    const char *class_name  = CFCParser_get_class_name(state);
+    const char *class_cnick = CFCParser_get_class_cnick(state);
+
+    /* Find modifiers by scanning the list. */
+    int is_abstract = false;
+    int is_final    = false;
+    int is_inline   = false;
+    int is_inert    = false;
+    if (declaration_modifier_list) {
+        is_abstract = !!strstr(declaration_modifier_list, "abstract");
+        is_final    = !!strstr(declaration_modifier_list, "final");
+        is_inline   = !!strstr(declaration_modifier_list, "inline");
+        is_inert    = !!strstr(declaration_modifier_list, "inert");
+    }
+
+    /* If "inert", it's a function, otherwise it's a method. */
+    if (is_inert) {
+        return (CFCBase*)CFCFunction_new(parcel, exposure, class_name,
+                                         class_cnick, name, (CFCType*)type,
+                                         (CFCParamList*)param_list,
+                                         (CFCDocuComment*)docucomment,
+                                         is_inline);
+    }
+    else {
+        return (CFCBase*)CFCMethod_new(parcel, exposure, class_name,
+                                       class_cnick, name,(CFCType*)type,
+                                       (CFCParamList*)param_list,
+                                       (CFCDocuComment*)docucomment, is_final,
+                                       is_abstract);
+    }
 }
+
+} /* End include block. */
 
 %syntax_error {
     CFCParser_set_errors(state, true);
@@ -68,6 +106,7 @@ result ::= docucomment(A).               { CFCParser_set_result(state, A); }
 result ::= parcel_definition(A).         { CFCParser_set_result(state, A); }
 result ::= cblock(A).                    { CFCParser_set_result(state, A); }
 result ::= var_declaration_statement(A). { CFCParser_set_result(state, A); }
+result ::= subroutine_declaration_statement(A). { CFCParser_set_result(state, A); }
 
 parcel_definition(A) ::= exposure_specifier(B) class_name(C) SEMICOLON.
 {
@@ -109,19 +148,72 @@ var_declaration_statement(A) ::= exposure_specifier(B) type(C) declarator(D) SEM
 }
 
 /* Discard INERT for now. */
-var_declaration_statement(A) ::= INERT type(B) declarator(C) SEMICOLON.
+var_declaration_statement(A) ::= declaration_modifier_list type(B) declarator(C) SEMICOLON.
 {
     A = (CFCBase*)CFCVariable_new(CFCParser_get_parcel(), "parcel", 
                                   CFCParser_get_class_name(state),
                                   CFCParser_get_class_cnick(state), C,
                                   (CFCType*)B);
 }
-var_declaration_statement(A) ::= exposure_specifier(B) INERT type(C) declarator(D) SEMICOLON.
+var_declaration_statement(A) ::= exposure_specifier(B) declaration_modifier_list type(C) declarator(D) SEMICOLON.
 {
     A = (CFCBase*)CFCVariable_new(CFCParser_get_parcel(), B,
                                   CFCParser_get_class_name(state),
                                   CFCParser_get_class_cnick(state), D,
                                   (CFCType*)C);
+}
+
+subroutine_declaration_statement(A) ::= 
+    type(E) declarator(F) param_list(G) SEMICOLON.
+{
+    A = S_new_sub(state, NULL, NULL, NULL, E, F, G);
+}
+subroutine_declaration_statement(A) ::= 
+    declaration_modifier_list(D)
+    type(E) declarator(F) param_list(G) SEMICOLON.
+{
+    A = S_new_sub(state, NULL, NULL, D, E, F, G);
+}
+subroutine_declaration_statement(A) ::= 
+    exposure_specifier(C)
+    declaration_modifier_list(D)
+    type(E) declarator(F) param_list(G) SEMICOLON.
+{
+    A = S_new_sub(state, NULL, C, D, E, F, G);
+}
+subroutine_declaration_statement(A) ::= 
+    exposure_specifier(C)
+    type(E) declarator(F) param_list(G) SEMICOLON.
+{
+    A = S_new_sub(state, NULL, C, NULL, E, F, G);
+}
+subroutine_declaration_statement(A) ::= 
+    docucomment(B)
+    type(E) declarator(F) param_list(G) SEMICOLON.
+{
+    A = S_new_sub(state, B, NULL, NULL, E, F, G);
+}
+subroutine_declaration_statement(A) ::= 
+    docucomment(B)
+    declaration_modifier_list(D)
+    type(E) declarator(F) param_list(G) SEMICOLON.
+{
+    A = S_new_sub(state, B, NULL, D, E, F, G);
+}
+subroutine_declaration_statement(A) ::= 
+    docucomment(B)
+    exposure_specifier(C)
+    declaration_modifier_list(D)
+    type(E) declarator(F) param_list(G) SEMICOLON.
+{
+    A = S_new_sub(state, B, C, D, E, F, G);
+}
+subroutine_declaration_statement(A) ::= 
+    docucomment(B)
+    exposure_specifier(C)
+    type(E) declarator(F) param_list(G) SEMICOLON.
+{
+    A = S_new_sub(state, B, C, NULL, E, F, G);
 }
 
 type(A) ::= simple_type(B).            { A = B; }
@@ -161,6 +253,8 @@ void_type(A) ::= void_type_specifier.
 %type object_type_specifier         {char*}
 %type type_qualifier                {int}
 %type type_qualifier_list           {int}
+%type declaration_modifier          {char*}
+%type declaration_modifier_list     {char*}
 %type scalar_constant               {char*}
 %type integer_literal               {char*}
 %type float_literal                 {char*}
@@ -179,6 +273,8 @@ void_type(A) ::= void_type_specifier.
 %destructor object_type_specifier       { FREEMEM($$); }
 %destructor type_qualifier              { }
 %destructor type_qualifier_list         { }
+%destructor declaration_modifier        { FREEMEM($$); }
+%destructor declaration_modifier_list   { FREEMEM($$); }
 %destructor scalar_constant             { FREEMEM($$); }
 %destructor integer_literal             { FREEMEM($$); }
 %destructor float_literal               { FREEMEM($$); }
@@ -277,6 +373,32 @@ type_qualifier_list(A) ::= type_qualifier_list CONST.       { A |= CFCTYPE_CONST
 type_qualifier_list(A) ::= type_qualifier_list NULLABLE.    { A |= CFCTYPE_NULLABLE; }
 type_qualifier_list(A) ::= type_qualifier_list INCREMENTED. { A |= CFCTYPE_INCREMENTED; }
 type_qualifier_list(A) ::= type_qualifier_list DECREMENTED. { A |= CFCTYPE_DECREMENTED; }
+
+declaration_modifier(A) ::= INERT.      { A = CFCUtil_strdup("inert"); }
+declaration_modifier(A) ::= INLINE.     { A = CFCUtil_strdup("inline"); }
+declaration_modifier(A) ::= ABSTRACT.   { A = CFCUtil_strdup("abstract"); }
+declaration_modifier(A) ::= FINAL.      { A = CFCUtil_strdup("final"); }
+
+declaration_modifier_list(A) ::= declaration_modifier(B).
+{
+    A = CFCUtil_strdup(B);
+}
+declaration_modifier_list(A) ::= declaration_modifier_list(B) INERT.
+{
+    A = CFCUtil_cat(CFCUtil_strdup(B), " inert", NULL);
+}
+declaration_modifier_list(A) ::= declaration_modifier_list(B) INLINE.
+{
+    A = CFCUtil_cat(CFCUtil_strdup(B), " inline", NULL);
+}
+declaration_modifier_list(A) ::= declaration_modifier_list(B) ABSTRACT.
+{
+    A = CFCUtil_cat(CFCUtil_strdup(B), " abstract", NULL);
+}
+declaration_modifier_list(A) ::= declaration_modifier_list(B) FINAL.
+{
+    A = CFCUtil_cat(CFCUtil_strdup(B), " final", NULL);
+}
 
 asterisk_postfix(A) ::= ASTERISK.
 {

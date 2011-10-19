@@ -44,14 +44,10 @@ like( $@, qr/extra_arg/, "Extra arg kills constructor" );
 eval { Clownfish::Function->new( %args, micro_sym => 'Uh_Oh' ); };
 like( $@, qr/Uh_Oh/, "invalid micro_sym kills constructor" );
 
-my %sub_args = ( class => 'Neato::Obj', cnick => 'Obj' );
-
-isa_ok(
-    $parser->subroutine_declaration_statement( $_, 0, %sub_args, inert => 1 )
-        ->{declared},
-    "Clownfish::Function",
-    "function declaration: $_"
-    )
+$parser->set_class_name("Neato::Obj");
+$parser->set_class_cnick("Obj");
+isa_ok( $parser->parse($_), "Clownfish::Function",
+    "function declaration: $_" )
     for (
     'inert int running_count(int biscuit);',
     'public inert Hash* init_fave_hash(int32_t num_buckets, bool_t o_rly);',

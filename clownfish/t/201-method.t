@@ -113,13 +113,9 @@ for my $meth_meth (qw( short_method_sym full_method_sym full_offset_sym)) {
     like( $@, qr/invoker/, "$meth_meth requires invoker" );
 }
 
-my %sub_args = ( class => 'Neato::Obj', cnick => 'Obj' );
-
-isa_ok(
-    $parser->subroutine_declaration_statement( $_, 0, %sub_args )->{declared},
-    "Clownfish::Method",
-    "method declaration: $_"
-    )
+$parser->set_class_name("Neato::Obj");
+$parser->set_class_cnick("Obj");
+isa_ok( $parser->parse($_), "Clownfish::Method", "method declaration: $_" )
     for (
     'public int Do_Foo(Obj *self);',
     'parcel Obj* Gimme_An_Obj(Obj *self);',
@@ -127,8 +123,8 @@ isa_ok(
     'private Foo* Fetch_Foo(Obj *self, int num);',
     );
 
-ok( $parser->subroutine_declaration_statement( $_, 0, %sub_args )->{declared}
-        ->final,
-    "final method: $_"
-) for ( 'public final void The_End(Obj *self);', );
+for ( 'public final void The_End(Obj *self);', ) {
+    my $meth = $parser->parse($_);
+    ok( $meth && $meth->final, "final method: $_" );
+}
 

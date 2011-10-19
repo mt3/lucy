@@ -82,17 +82,17 @@ is( $final_foo->include_h, 'Foo/FooJr.h', "inlude_h uses source_class" );
 is( $final_foo->get_parent_class_name, 'Foo::FooJr',
     "get_parent_class_name" );
 
-my $do_stuff
-    = $parser->subroutine_declaration_statement( 'void Do_Stuff(Foo *self);',
-    0, class => 'Foo' )->{declared}
+$parser->parse("parcel Neato;");
+$parser->set_class_name("Foo");
+my $do_stuff = $parser->parse('void Do_Stuff(Foo *self);')
     or die "parsing failure";
 $foo->add_method($do_stuff);
 
-my $inert_do_stuff
-    = $parser->subroutine_declaration_statement(
-    'void Do_Stuff(InertFoo *self);',
-    0, class => 'InertFoo' )->{declared}
+$parser->set_class_name("InertFoo");
+my $inert_do_stuff = $parser->parse('void Do_Stuff(InertFoo *self);')
     or die "parsing failure";
+$parser->set_class_name("");
+
 my %inert_args = (
     parcel     => 'Neato',
     class_name => 'InertFoo',
@@ -145,7 +145,7 @@ ok( $parser->class_inheritance($_), "class_inheritance: $_" )
     for ( 'inherits Foo', 'inherits Foo::FooJr::FooIII' );
 
 my $class_content
-    = 'public class Foo::FooJr cnick FooJr inherits Foo { private int num; }';
+    = 'public class Foo::Foodie cnick Foodie inherits Foo { private int num; }';
 my $class = $parser->class_declaration($class_content);
 isa_ok( $class, "Clownfish::Class", "class_declaration FooJr" );
 ok( ( scalar grep { $_->micro_sym eq 'num' } @{ $class->member_vars } ),
