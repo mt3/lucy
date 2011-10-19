@@ -65,38 +65,56 @@ CFCParser_init(CFCParser *self) {
     if (self->header_parser == NULL) {
         CFCUtil_die("Failed to allocate header parser");
     }
+    self->result       = NULL;
+    self->errors       = false;
+    self->text         = NULL;
+    self->cap          = 0;
+    self->class_name   = NULL;
+    self->class_cnick  = NULL;
     return self;
 }
 
 void
 CFCParser_destroy(CFCParser *self) {
     CFCParseHeaderFree(self->header_parser, free);
+    FREEMEM(self->text);
+    FREEMEM(self->class_name);
+    FREEMEM(self->class_cnick);
+    CFCBase_decref(self->result);
     CFCBase_destroy((CFCBase*)self);
 }
 
-static CFCParser state;
-CFCParser *CFCParser_current_state  = &state;
-void           *CFCParser_current_parser = NULL;
-CFCParcel      *CFCParser_current_parcel = NULL;
+CFCParser *CFCParser_current_state  = NULL;
+void      *CFCParser_current_parser = NULL;
+CFCParcel *CFCParser_current_parcel = NULL;
+
+static void
+S_zero_out_parser(CFCParser *self) {
+    CFCParser_set_text(self, "", 0);
+    CFCParser_set_class_name(self, NULL);
+    CFCParser_set_class_cnick(self, NULL);
+    self->errors = false;
+}
 
 CFCBase*
 CFCParser_parse(CFCParser *self, const char *string) {
+    // Make Lemon-based parser and parser state available from Flex-based scanner.
+    CFCParser_current_state  = self;
     CFCParser_current_parser = self->header_parser;
-    state.result = NULL;
-    state.errors = false;
-    state.text   = NULL;
 
+    // Zero out, then parse.
+    S_zero_out_parser(self);
     YY_BUFFER_STATE buffer = yy_scan_bytes(string, (int)strlen(string));
     yylex();
     yy_delete_buffer(buffer);
 
     // Finish up.
-    CFCParseHeader(CFCParser_current_parser, 0, NULL, &state);
-    if (state.errors) {
-        CFCBase_decref((CFCBase*)state.result);
-        return NULL;
+    CFCParseHeader(CFCParser_current_parser, 0, NULL, self);
+    if (self->errors) {
+        CFCBase_decref((CFCBase*)self->result);
+        self->result = NULL;
     }
-    return state.result;
+    return self->result;
 }
 
 void
