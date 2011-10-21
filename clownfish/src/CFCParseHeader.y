@@ -377,11 +377,15 @@ type_qualifier(A) ::= NULLABLE.    { A = CFCTYPE_NULLABLE; }
 type_qualifier(A) ::= INCREMENTED. { A = CFCTYPE_INCREMENTED; }
 type_qualifier(A) ::= DECREMENTED. { A = CFCTYPE_DECREMENTED; }
 
-type_qualifier_list(A) ::= type_qualifier(B).               { A = B; }
-type_qualifier_list(A) ::= type_qualifier_list CONST.       { A |= CFCTYPE_CONST; }
-type_qualifier_list(A) ::= type_qualifier_list NULLABLE.    { A |= CFCTYPE_NULLABLE; }
-type_qualifier_list(A) ::= type_qualifier_list INCREMENTED. { A |= CFCTYPE_INCREMENTED; }
-type_qualifier_list(A) ::= type_qualifier_list DECREMENTED. { A |= CFCTYPE_DECREMENTED; }
+type_qualifier_list(A) ::= type_qualifier(B).
+{
+    A = B;
+}
+type_qualifier_list(A) ::= type_qualifier_list(B) type_qualifier(C).
+{
+    A = B;
+    A |= C;
+}
 
 declaration_modifier(A) ::= INERT.      { A = CFCUtil_strdup("inert"); }
 declaration_modifier(A) ::= INLINE.     { A = CFCUtil_strdup("inline"); }
