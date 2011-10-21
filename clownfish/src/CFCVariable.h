@@ -45,6 +45,9 @@ CFCVariable_equals(CFCVariable *self, CFCVariable *other);
 struct CFCType*
 CFCVariable_get_type(CFCVariable *self);
 
+int
+CFCVariable_inert(CFCVariable *self);
+
 const char*
 CFCVariable_local_c(CFCVariable *self);
 
