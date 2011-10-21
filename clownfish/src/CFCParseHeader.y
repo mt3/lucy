@@ -396,21 +396,9 @@ declaration_modifier_list(A) ::= declaration_modifier(B).
 {
     A = CFCUtil_strdup(B);
 }
-declaration_modifier_list(A) ::= declaration_modifier_list(B) INERT.
+declaration_modifier_list(A) ::= declaration_modifier_list(B) declaration_modifier(C).
 {
-    A = CFCUtil_cat(CFCUtil_strdup(B), " inert", NULL);
-}
-declaration_modifier_list(A) ::= declaration_modifier_list(B) INLINE.
-{
-    A = CFCUtil_cat(CFCUtil_strdup(B), " inline", NULL);
-}
-declaration_modifier_list(A) ::= declaration_modifier_list(B) ABSTRACT.
-{
-    A = CFCUtil_cat(CFCUtil_strdup(B), " abstract", NULL);
-}
-declaration_modifier_list(A) ::= declaration_modifier_list(B) FINAL.
-{
-    A = CFCUtil_cat(CFCUtil_strdup(B), " final", NULL);
+    A = CFCUtil_cat(CFCUtil_strdup(B), " ", C, NULL);
 }
 
 asterisk_postfix(A) ::= ASTERISK.
