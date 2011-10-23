@@ -49,6 +49,8 @@ static const char KW_SIZE_T[]   = "size_t";
 static const char KW_BOOL_T[]   = "bool_t";
 static const char KW_FLOAT[]    = "float";
 static const char KW_DOUBLE[]   = "double";
+static const char KW_VOID[]     = "void";
+static const char KW_VA_LIST[]  = "va_list";
 
 static CFCBase*
 S_new_var(CFCParser *state, const char *exposure, const char *modifiers,
@@ -101,6 +103,87 @@ S_new_sub(CFCParser *state, CFCBase *docucomment,
                                        (CFCDocuComment*)docucomment, is_final,
                                        is_abstract);
     }
+}
+
+static CFCBase*
+S_new_type(CFCParser *state, int flags, const char *type_name,
+           const char *asterisk_postfix, const char *array_postfix) {
+    CFCType *type = NULL;
+    size_t type_name_len = strlen(type_name);
+    int indirection = asterisk_postfix ? strlen(asterisk_postfix) : 0;
+
+    /* Apply "nullable" to outermost pointer, but "const", etc to innermost
+     * type. This is an ugly kludge and the Clownfish header language needs to
+     * be fixed, either to support C's terrible pointer type syntax, or to do
+     * something better. */
+    int composite_flags = 0;
+    if (indirection) {
+        composite_flags = flags & CFCTYPE_NULLABLE;
+        flags &= ~CFCTYPE_NULLABLE;
+    }
+
+    if (!strcmp(type_name, KW_INT8_T)
+        || !strcmp(type_name, KW_INT16_T)
+        || !strcmp(type_name, KW_INT32_T)
+        || !strcmp(type_name, KW_INT64_T)
+        || !strcmp(type_name, KW_UINT8_T)
+        || !strcmp(type_name, KW_UINT16_T)
+        || !strcmp(type_name, KW_UINT32_T)
+        || !strcmp(type_name, KW_UINT64_T)
+        || !strcmp(type_name, KW_CHAR)
+        || !strcmp(type_name, KW_SHORT)
+        || !strcmp(type_name, KW_INT)
+        || !strcmp(type_name, KW_LONG)
+        || !strcmp(type_name, KW_SIZE_T)
+        || !strcmp(type_name, KW_BOOL_T)
+       ) {
+        type = CFCType_new_integer(flags, type_name);
+    }
+    else if (!strcmp(type_name, KW_FLOAT)
+             || !strcmp(type_name, KW_DOUBLE)
+            ) {
+        type = CFCType_new_float(flags, type_name);
+    }
+    else if (!strcmp(type_name, KW_VOID)) {
+        type = CFCType_new_void(!!(flags & CFCTYPE_CONST));
+    }
+    else if (!strcmp(type_name, KW_VA_LIST)) {
+        type = CFCType_new_va_list();
+    }
+    else if (type_name_len > 2
+             && !strcmp(type_name + type_name_len - 2, "_t")
+            ) {
+        type = CFCType_new_arbitrary(CFCParser_get_parcel(),
+                                     CFCParser_get_text(state));
+    }
+    else if (indirection > 0) {
+        /* The only remaining possibility is an object type, and we can let
+         * the constructor perform the complex validation of the type name. */
+        indirection--;
+        if (indirection == 0) {
+            flags |= composite_flags;
+            composite_flags = 0;
+        }
+        type = CFCType_new_object(flags, CFCParser_get_parcel(), type_name, 1);
+    }
+    else {
+        CFCUtil_die("Invalid type specification at/near '%s'", type_name);
+    }
+
+    if (indirection) {
+        CFCType *composite = CFCType_new_composite(composite_flags, type,
+                                                   indirection, NULL);
+        CFCBase_decref((CFCBase*)type);
+        type = composite;
+    }
+    else if (array_postfix) {
+        CFCType *composite = CFCType_new_composite(composite_flags, type,
+                                                   0, array_postfix);
+        CFCBase_decref((CFCBase*)type);
+        type = composite;
+    }
+
+    return (CFCBase*)type;
 }
 
 } /* End include block. */
@@ -225,39 +308,36 @@ subroutine_declaration_statement(A) ::=
     A = S_new_sub(state, B, C, NULL, E, F, G);
 }
 
-type(A) ::= simple_type(B).            { A = B; }
-type(A) ::= composite_type(B).         { A = B; }
-
-composite_type(A) ::= simple_type(B) asterisk_postfix(C).
+type(A) ::= type_name(C).
 {
-    int indirection = strlen(C);
-    A = (CFCBase*)CFCType_new_composite(0, (CFCType*)B, indirection, NULL);
+    A = S_new_type(state, 0, C, NULL, NULL);
 }
-
-composite_type(A) ::= simple_type(B) array_postfix(C).
+type(A) ::= type_name(C) asterisk_postfix(D).
 {
-    A = (CFCBase*)CFCType_new_composite(0, (CFCType*)B, 0, C);
+    A = S_new_type(state, 0, C, D, NULL);
 }
-
-simple_type(A) ::= object_type(B).  { A = B; }
-simple_type(A) ::= void_type(B).    { A = B; }
-simple_type(A) ::= float_type(B).   { A = B; }
-simple_type(A) ::= integer_type(B). { A = B; }
-simple_type(A) ::= va_list_type(B). { A = B; }
-simple_type(A) ::= arbitrary_type(B). { A = B; }
-
-void_type(A) ::= CONST void_type_specifier.
+type(A) ::= type_name(C) array_postfix(E).
 {
-    A = (CFCBase*)CFCType_new_void(true);
+    A = S_new_type(state, 0, C, NULL, E);
 }
-
-void_type(A) ::= void_type_specifier.
+type(A) ::= type_qualifier_list(B) type_name(C).
 {
-    A = (CFCBase*)CFCType_new_void(false);
+    A = S_new_type(state, B, C, NULL, NULL);
+}
+type(A) ::= type_qualifier_list(B) type_name(C) asterisk_postfix(D).
+{
+    A = S_new_type(state, B, C, D, NULL);
+}
+type(A) ::= type_qualifier_list(B) type_name(C) array_postfix(E).
+{
+    A = S_new_type(state, B, C, NULL, E);
 }
 
 %type identifier                    {char*}
+%type type_name                     {char*}
 %type exposure_specifier            {char*}
+%type void_type_specifier           {const char*}
+%type va_list_specifier             {const char*}
 %type float_type_specifier          {const char*}
 %type integer_type_specifier        {const char*}
 %type object_type_specifier         {char*}
@@ -278,7 +358,10 @@ void_type(A) ::= void_type_specifier.
 %type cnick                         {char*}
 %type blob                          {char*}
 %destructor identifier                  { FREEMEM($$); }
+%destructor type_name                   { FREEMEM($$); }
 %destructor exposure_specifier          { FREEMEM($$); }
+%destructor void_type_specifier         { }
+%destructor va_list_specifier           { }
 %destructor float_type_specifier        { }
 %destructor integer_type_specifier      { }
 %destructor object_type_specifier       { FREEMEM($$); }
@@ -299,8 +382,8 @@ void_type(A) ::= void_type_specifier.
 %destructor cnick                       { FREEMEM($$); }
 %destructor blob                        { FREEMEM($$); }
 
-void_type_specifier ::= VOID.
-va_list_specifier         ::= VA_LIST.
+void_type_specifier(A)    ::= VOID.      { A = KW_VOID; }
+va_list_specifier(A)      ::= VA_LIST.   { A = KW_VA_LIST; }
 integer_type_specifier(A) ::= INT8_T.    { A = KW_INT8_T; }
 integer_type_specifier(A) ::= INT16_T.   { A = KW_INT16_T; }
 integer_type_specifier(A) ::= INT32_T.   { A = KW_INT32_T; }
@@ -318,56 +401,16 @@ integer_type_specifier(A) ::= BOOL_T.    { A = KW_BOOL_T; }
 float_type_specifier(A) ::= FLOAT.   { A = KW_FLOAT; }
 float_type_specifier(A) ::= DOUBLE.  { A = KW_DOUBLE; }
 
+type_name(A) ::= void_type_specifier(B).     { A = CFCUtil_strdup(B); }
+type_name(A) ::= va_list_specifier(B).       { A = CFCUtil_strdup(B); }
+type_name(A) ::= integer_type_specifier(B).  { A = CFCUtil_strdup(B); }
+type_name(A) ::= float_type_specifier(B).    { A = CFCUtil_strdup(B); }
+type_name(A) ::= identifier(B).              { A = CFCUtil_strdup(B); }
+
 exposure_specifier(A) ::= PUBLIC.  { A = CFCUtil_strdup("public"); }
 exposure_specifier(A) ::= PRIVATE. { A = CFCUtil_strdup("private"); }
 exposure_specifier(A) ::= PARCEL.  { A = CFCUtil_strdup("parcel"); }
 exposure_specifier(A) ::= LOCAL.   { A = CFCUtil_strdup("local"); }
-
-integer_type(A) ::= integer_type_specifier(B).
-{
-    A = (CFCBase*)CFCType_new_integer(0, B);
-}
-
-integer_type(A) ::= CONST integer_type_specifier(B).
-{
-    A = (CFCBase*)CFCType_new_integer(CFCTYPE_CONST, B);
-}
-
-float_type(A) ::= float_type_specifier(B).
-{
-    A = (CFCBase*)CFCType_new_float(0, B);
-}
-
-float_type(A) ::= CONST float_type_specifier(B).
-{
-    A = (CFCBase*)CFCType_new_float(CFCTYPE_CONST, B);
-}
-
-va_list_type(A) ::= va_list_specifier.
-{
-    A = (CFCBase*)CFCType_new_va_list();
-}
-
-arbitrary_type(A) ::= ARBITRARY.
-{
-    A = (CFCBase*)CFCType_new_arbitrary(CFCParser_get_parcel(),
-                                        CFCParser_get_text(state));
-}
-
-object_type(A) ::= object_type_specifier(B) ASTERISK.
-{
-    A = (CFCBase*)CFCType_new_object(0, CFCParser_get_parcel(), B, 1);
-}
-
-object_type(A) ::= type_qualifier_list(B) object_type_specifier(C) ASTERISK.
-{
-    A = (CFCBase*)CFCType_new_object(B, CFCParser_get_parcel(), C, 1);
-}
-
-object_type_specifier(A) ::= identifier(B).
-{
-    A = CFCUtil_strdup(B);
-}
 
 type_qualifier(A) ::= CONST.       { A = CFCTYPE_CONST; }
 type_qualifier(A) ::= NULLABLE.    { A = CFCTYPE_NULLABLE; }
