@@ -124,7 +124,7 @@ result ::= cblock(A).                    { CFCParser_set_result(state, A); }
 result ::= var_declaration_statement(A). { CFCParser_set_result(state, A); }
 result ::= subroutine_declaration_statement(A). { CFCParser_set_result(state, A); }
 
-parcel_definition(A) ::= exposure_specifier(B) class_name(C) SEMICOLON.
+parcel_definition(A) ::= exposure_specifier(B) qualified_id(C) SEMICOLON.
 {
     if (strcmp(B, "parcel") != 0) {
         /* Instead of this kludgy post-parse error trigger, we should require
@@ -138,7 +138,7 @@ parcel_definition(A) ::= exposure_specifier(B) class_name(C) SEMICOLON.
     CFCParser_set_parcel((CFCParcel*)A);
 }
 
-parcel_definition(A) ::= exposure_specifier(B) class_name(C) cnick(D) SEMICOLON.
+parcel_definition(A) ::= exposure_specifier(B) qualified_id(C) cnick(D) SEMICOLON.
 {
     if (strcmp(B, "parcel") != 0) {
          CFCUtil_die("A syntax error was detected when parsing '%s'", B);
@@ -274,7 +274,7 @@ void_type(A) ::= void_type_specifier.
 %type array_postfix                 {char*}
 %type array_postfix_elem            {char*}
 %type declarator                    {char*}
-%type class_name                    {char*}
+%type qualified_id                  {char*}
 %type cnick                         {char*}
 %type blob                          {char*}
 %destructor identifier                  { FREEMEM($$); }
@@ -295,7 +295,7 @@ void_type(A) ::= void_type_specifier.
 %destructor array_postfix               { FREEMEM($$); }
 %destructor array_postfix_elem          { FREEMEM($$); }
 %destructor declarator                  { FREEMEM($$); }
-%destructor class_name                  { FREEMEM($$); }
+%destructor qualified_id                { FREEMEM($$); }
 %destructor cnick                       { FREEMEM($$); }
 %destructor blob                        { FREEMEM($$); }
 
@@ -504,12 +504,12 @@ identifier(A) ::= IDENTIFIER.
     A = CFCUtil_strdup(CFCParser_get_text(state));
 }
 
-class_name(A) ::= identifier(B).
+qualified_id(A) ::= identifier(B).
 {
     A = CFCUtil_strdup(B);
 }
 
-class_name(A) ::= class_name(B) SCOPE_OP identifier(C).
+qualified_id(A) ::= qualified_id(B) SCOPE_OP identifier(C).
 {
     A = CFCUtil_cat(CFCUtil_strdup(B), "::", C, NULL);
 }
