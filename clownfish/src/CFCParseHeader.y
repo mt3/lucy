@@ -256,6 +256,7 @@ void_type(A) ::= void_type_specifier.
     A = (CFCBase*)CFCType_new_void(false);
 }
 
+%type identifier                    {char*}
 %type exposure_specifier            {char*}
 %type float_type_specifier          {const char*}
 %type integer_type_specifier        {const char*}
@@ -276,6 +277,7 @@ void_type(A) ::= void_type_specifier.
 %type class_name                    {char*}
 %type cnick                         {char*}
 %type blob                          {char*}
+%destructor identifier                  { FREEMEM($$); }
 %destructor exposure_specifier          { FREEMEM($$); }
 %destructor float_type_specifier        { }
 %destructor integer_type_specifier      { }
@@ -362,14 +364,9 @@ object_type(A) ::= type_qualifier_list(B) object_type_specifier(C) ASTERISK.
     A = (CFCBase*)CFCType_new_object(B, CFCParser_get_parcel(), C, 1);
 }
 
-object_type_specifier(A) ::= CLASS_NAME_COMPONENT.
+object_type_specifier(A) ::= identifier(B).
 {
-    A = CFCUtil_strdup(CFCParser_get_text(state));
-}
-
-object_type_specifier(A) ::= PREFIXED_OBJECT_TYPE_SPECIFIER.
-{
-    A = CFCUtil_strdup(CFCParser_get_text(state));
+    A = CFCUtil_strdup(B);
 }
 
 type_qualifier(A) ::= CONST.       { A = CFCTYPE_CONST; }
@@ -453,9 +450,9 @@ string_literal(A) ::= STRING_LITERAL.
     A = CFCUtil_strdup(CFCParser_get_text(state));
 }
 
-declarator(A) ::= IDENTIFIER.
+declarator(A) ::= identifier(B).
 {
-    A = CFCUtil_strdup(CFCParser_get_text(state));
+    A = CFCUtil_strdup(B);
 }
 
 param_variable(A) ::= type(B) declarator(C).
@@ -502,19 +499,24 @@ docucomment(A) ::= DOCUCOMMENT.
     A = (CFCBase*)CFCDocuComment_parse(CFCParser_get_text(state));
 }
 
-class_name(A) ::= CLASS_NAME_MULTI.
+identifier(A) ::= IDENTIFIER.
 {
     A = CFCUtil_strdup(CFCParser_get_text(state));
 }
 
-class_name(A) ::= CLASS_NAME_COMPONENT.
+class_name(A) ::= identifier(B).
 {
-    A = CFCUtil_strdup(CFCParser_get_text(state));
+    A = CFCUtil_strdup(B);
 }
 
-cnick(A) ::= CNICK CLASS_NAME_COMPONENT.
+class_name(A) ::= class_name(B) SCOPE_OP identifier(C).
 {
-    A = CFCUtil_strdup(CFCParser_get_text(state));
+    A = CFCUtil_cat(CFCUtil_strdup(B), "::", C, NULL);
+}
+
+cnick(A) ::= CNICK identifier(B).
+{
+    A = CFCUtil_strdup(B);
 }
 
 cblock(A) ::= CBLOCK_START blob(B) CBLOCK_CLOSE.
