@@ -53,6 +53,26 @@ static const char KW_VOID[]     = "void";
 static const char KW_VA_LIST[]  = "va_list";
 
 static CFCBase*
+S_start_class(CFCParser *state, CFCBase *docucomment, const char *exposure,
+            const char *declaration_modifier_list, const char *class_name,
+            const char *class_cnick, const char *inheritance) {
+    const char *source_class = NULL; /* FIXME derive from file. */
+    int is_final = false;
+    int is_inert = false;
+    if (declaration_modifier_list) {
+        is_final = !!strstr(declaration_modifier_list, "final");
+        is_inert = !!strstr(declaration_modifier_list, "inert");
+    }
+    CFCParser_set_class_name(state, class_name);
+    CFCParser_set_class_cnick(state, class_cnick);
+    return (CFCBase*)CFCClass_create(CFCParser_get_parcel(), exposure,
+                                     class_name, class_cnick, NULL,
+                                     (CFCDocuComment*)docucomment,
+                                     source_class, inheritance, is_final,
+                                     is_inert);
+}
+
+static CFCBase*
 S_new_var(CFCParser *state, const char *exposure, const char *modifiers,
           CFCBase *type, const char *name) {
     int inert = false;
@@ -206,6 +226,7 @@ result ::= parcel_definition(A).         { CFCParser_set_result(state, A); }
 result ::= cblock(A).                    { CFCParser_set_result(state, A); }
 result ::= var_declaration_statement(A). { CFCParser_set_result(state, A); }
 result ::= subroutine_declaration_statement(A). { CFCParser_set_result(state, A); }
+result ::= class_declaration(A).         { CFCParser_set_result(state, A); }
 
 parcel_definition(A) ::= exposure_specifier(B) qualified_id(C) SEMICOLON.
 {
@@ -228,6 +249,77 @@ parcel_definition(A) ::= exposure_specifier(B) qualified_id(C) cnick(D) SEMICOLO
     }
     A = (CFCBase*)CFCParcel_singleton(C, D);
     CFCParser_set_parcel((CFCParcel*)A);
+}
+
+class_declaration(A) ::= class_defs(B) RIGHT_CURLY_BRACE.
+{
+    A = B;
+    CFCParser_set_class_name(state, NULL);
+    CFCParser_set_class_cnick(state, NULL);
+}
+
+class_head(A) ::= docucomment(B) exposure_specifier(C) declaration_modifier_list(D) CLASS qualified_id(E) cnick(F) class_inheritance(G).  { A = S_start_class(state, B,    C,    D,    E,    F,    G   ); }
+class_head(A) ::=                exposure_specifier(C) declaration_modifier_list(D) CLASS qualified_id(E) cnick(F) class_inheritance(G).  { A = S_start_class(state, NULL, C,    D,    E,    F,    G   ); }
+class_head(A) ::= docucomment(B)                       declaration_modifier_list(D) CLASS qualified_id(E) cnick(F) class_inheritance(G).  { A = S_start_class(state, B,    NULL, D,    E,    F,    G   ); }
+class_head(A) ::=                                      declaration_modifier_list(D) CLASS qualified_id(E) cnick(F) class_inheritance(G).  { A = S_start_class(state, NULL, NULL, D,    E,    F,    G   ); }
+class_head(A) ::= docucomment(B) exposure_specifier(C)                              CLASS qualified_id(E) cnick(F) class_inheritance(G).  { A = S_start_class(state, B,    C,    NULL, E,    F,    G   ); }
+class_head(A) ::=                exposure_specifier(C)                              CLASS qualified_id(E) cnick(F) class_inheritance(G).  { A = S_start_class(state, NULL, C,    NULL, E,    F,    G   ); }
+class_head(A) ::= docucomment(B)                                                    CLASS qualified_id(E) cnick(F) class_inheritance(G).  { A = S_start_class(state, B,    NULL, NULL, E,    F,    G   ); }
+class_head(A) ::=                                                                   CLASS qualified_id(E) cnick(F) class_inheritance(G).  { A = S_start_class(state, NULL, NULL, NULL, E,    F,    G   ); }
+class_head(A) ::= docucomment(B) exposure_specifier(C) declaration_modifier_list(D) CLASS qualified_id(E)          class_inheritance(G).  { A = S_start_class(state, B,    C,    D,    E,    NULL, G   ); }
+class_head(A) ::=                exposure_specifier(C) declaration_modifier_list(D) CLASS qualified_id(E)          class_inheritance(G).  { A = S_start_class(state, NULL, C,    D,    E,    NULL, G   ); }
+class_head(A) ::= docucomment(B)                       declaration_modifier_list(D) CLASS qualified_id(E)          class_inheritance(G).  { A = S_start_class(state, B,    NULL, D,    E,    NULL, G   ); }
+class_head(A) ::=                                      declaration_modifier_list(D) CLASS qualified_id(E)          class_inheritance(G).  { A = S_start_class(state, NULL, NULL, D,    E,    NULL, G   ); }
+class_head(A) ::= docucomment(B) exposure_specifier(C)                              CLASS qualified_id(E)          class_inheritance(G).  { A = S_start_class(state, B,    C,    NULL, E,    NULL, G   ); }
+class_head(A) ::=                exposure_specifier(C)                              CLASS qualified_id(E)          class_inheritance(G).  { A = S_start_class(state, NULL, C,    NULL, E,    NULL, G   ); }
+class_head(A) ::= docucomment(B)                                                    CLASS qualified_id(E)          class_inheritance(G).  { A = S_start_class(state, B,    NULL, NULL, E,    NULL, G   ); }
+class_head(A) ::=                                                                   CLASS qualified_id(E)          class_inheritance(G).  { A = S_start_class(state, NULL, NULL, NULL, E,    NULL, G   ); }
+class_head(A) ::= docucomment(B) exposure_specifier(C) declaration_modifier_list(D) CLASS qualified_id(E) cnick(F)                     .  { A = S_start_class(state, B,    C,    D,    E,    F,    NULL ); }
+class_head(A) ::=                exposure_specifier(C) declaration_modifier_list(D) CLASS qualified_id(E) cnick(F)                     .  { A = S_start_class(state, NULL, C,    D,    E,    F,    NULL ); }
+class_head(A) ::= docucomment(B)                       declaration_modifier_list(D) CLASS qualified_id(E) cnick(F)                     .  { A = S_start_class(state, B,    NULL, D,    E,    F,    NULL ); }
+class_head(A) ::=                                      declaration_modifier_list(D) CLASS qualified_id(E) cnick(F)                     .  { A = S_start_class(state, NULL, NULL, D,    E,    F,    NULL ); }
+class_head(A) ::= docucomment(B) exposure_specifier(C)                              CLASS qualified_id(E) cnick(F)                     .  { A = S_start_class(state, B,    C,    NULL, E,    F,    NULL ); }
+class_head(A) ::=                exposure_specifier(C)                              CLASS qualified_id(E) cnick(F)                     .  { A = S_start_class(state, NULL, C,    NULL, E,    F,    NULL ); }
+class_head(A) ::= docucomment(B)                                                    CLASS qualified_id(E) cnick(F)                     .  { A = S_start_class(state, B,    NULL, NULL, E,    F,    NULL ); }
+class_head(A) ::=                                                                   CLASS qualified_id(E) cnick(F)                     .  { A = S_start_class(state, NULL, NULL, NULL, E,    F,    NULL ); }
+class_head(A) ::= docucomment(B) exposure_specifier(C) declaration_modifier_list(D) CLASS qualified_id(E)                              .  { A = S_start_class(state, B,    C,    D,    E,    NULL, NULL ); }
+class_head(A) ::=                exposure_specifier(C) declaration_modifier_list(D) CLASS qualified_id(E)                              .  { A = S_start_class(state, NULL, C,    D,    E,    NULL, NULL ); }
+class_head(A) ::= docucomment(B)                       declaration_modifier_list(D) CLASS qualified_id(E)                              .  { A = S_start_class(state, B,    NULL, D,    E,    NULL, NULL ); }
+class_head(A) ::=                                      declaration_modifier_list(D) CLASS qualified_id(E)                              .  { A = S_start_class(state, NULL, NULL, D,    E,    NULL, NULL ); }
+class_head(A) ::= docucomment(B) exposure_specifier(C)                              CLASS qualified_id(E)                              .  { A = S_start_class(state, B,    C,    NULL, E,    NULL, NULL ); }
+class_head(A) ::=                exposure_specifier(C)                              CLASS qualified_id(E)                              .  { A = S_start_class(state, NULL, C,    NULL, E,    NULL, NULL ); }
+class_head(A) ::= docucomment(B)                                                    CLASS qualified_id(E)                              .  { A = S_start_class(state, B,    NULL, NULL, E,    NULL, NULL ); }
+class_head(A) ::=                                                                   CLASS qualified_id(E)                              .  { A = S_start_class(state, NULL, NULL, NULL, E,    NULL, NULL ); }
+
+class_head(A) ::= class_head(B) COLON identifier(C).
+{
+    A = B;
+    CFCClass_add_attribute((CFCClass*)A, C, "1");
+}
+
+class_defs(A) ::= class_head(B) LEFT_CURLY_BRACE.
+{
+    A = B;
+}
+class_defs(A) ::= class_defs(B) var_declaration_statement(C).
+{
+    A = B;
+    if (CFCVariable_inert((CFCVariable*)C)) {
+        CFCClass_add_inert_var((CFCClass*)A, (CFCVariable*)C);
+    }
+    else {
+        CFCClass_add_member_var((CFCClass*)A, (CFCVariable*)C);
+    }
+}
+class_defs(A) ::= class_defs(B) subroutine_declaration_statement(C).
+{
+    A = B;
+    if (strcmp(CFCBase_get_cfc_class(C), "Clownfish::Function") == 0) {
+        CFCClass_add_function((CFCClass*)A, (CFCFunction*)C);
+    }
+    else {
+        CFCClass_add_method((CFCClass*)A, (CFCMethod*)C);
+    }
 }
 
 var_declaration_statement(A) ::= 
@@ -355,6 +447,7 @@ type(A) ::= type_qualifier_list(B) type_name(C) array_postfix(E).
 %type array_postfix_elem            {char*}
 %type declarator                    {char*}
 %type qualified_id                  {char*}
+%type class_inheritance             {char*}
 %type cnick                         {char*}
 %type blob                          {char*}
 %destructor identifier                  { FREEMEM($$); }
@@ -379,6 +472,7 @@ type(A) ::= type_qualifier_list(B) type_name(C) array_postfix(E).
 %destructor array_postfix_elem          { FREEMEM($$); }
 %destructor declarator                  { FREEMEM($$); }
 %destructor qualified_id                { FREEMEM($$); }
+%destructor class_inheritance           { FREEMEM($$); }
 %destructor cnick                       { FREEMEM($$); }
 %destructor blob                        { FREEMEM($$); }
 
@@ -555,6 +649,11 @@ qualified_id(A) ::= identifier(B).
 qualified_id(A) ::= qualified_id(B) SCOPE_OP identifier(C).
 {
     A = CFCUtil_cat(CFCUtil_strdup(B), "::", C, NULL);
+}
+
+class_inheritance(A) ::= INHERITS qualified_id(B).
+{
+    A = CFCUtil_strdup(B);
 }
 
 cnick(A) ::= CNICK identifier(B).

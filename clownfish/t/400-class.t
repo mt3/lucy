@@ -146,7 +146,7 @@ ok( $parser->class_inheritance($_), "class_inheritance: $_" )
 
 my $class_content
     = 'public class Foo::Foodie cnick Foodie inherits Foo { private int num; }';
-my $class = $parser->class_declaration($class_content);
+my $class = $parser->parse($class_content);
 isa_ok( $class, "Clownfish::Class", "class_declaration FooJr" );
 ok( ( scalar grep { $_->micro_sym eq 'num' } @{ $class->member_vars } ),
     "parsed private member var" );
@@ -182,7 +182,7 @@ $class_content = q|
     }
 |;
 
-$class = $parser->class_declaration($class_content);
+$class = $parser->parse($class_content);
 isa_ok( $class, "Clownfish::Class", "class_declaration Dog" );
 ok( ( scalar grep { $_->micro_sym eq 'num_dogs' } @{ $class->inert_vars } ),
     "parsed inert var" );
@@ -216,7 +216,7 @@ $class_content = qq|
     parcel inert class Rigor::Mortis cnick Mort {
         parcel inert void lie_still();
     }|;
-$class = $parser->class_declaration($class_content);
+$class = $parser->parse($class_content);
 isa_ok( $class, "Clownfish::Class", "inert class_declaration" );
 ok( $class->inert, "inert modifier parsed and passed to constructor" );
 
@@ -226,5 +226,5 @@ $class_content = qq|
          */
         void Say_Never(Ultimo *self);
     }|;
-$class = $parser->class_declaration($class_content);
+$class = $parser->parse($class_content);
 ok( $class->final, "final class_declaration" );
