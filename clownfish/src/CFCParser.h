@@ -40,6 +40,10 @@ CFCParser_destroy(CFCParser *self);
 struct CFCBase*
 CFCParser_parse(CFCParser *self, const char *string);
 
+struct CFCBase*
+CFCParser_parse_file(CFCParser *self, const char *string,
+                     const char *source_class);
+
 void
 CFCParser_set_result(CFCParser *self, struct CFCBase *result);
 
@@ -69,6 +73,12 @@ CFCParser_set_class_cnick(CFCParser *self, const char *class_cnick);
 
 const char*
 CFCParser_get_class_cnick(CFCParser *self);
+
+void
+CFCParser_set_source_class(CFCParser *self, const char *source_class);
+
+const char*
+CFCParser_get_source_class(CFCParser *self);
 
 #ifdef __cplusplus
 }

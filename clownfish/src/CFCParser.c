@@ -50,6 +50,7 @@ struct CFCParser {
     size_t cap;
     char *class_name;
     char *class_cnick;
+    char *source_class;
 };
 
 CFCParser*
@@ -71,6 +72,7 @@ CFCParser_init(CFCParser *self) {
     self->cap          = 0;
     self->class_name   = NULL;
     self->class_cnick  = NULL;
+    self->source_class = NULL;
     return self;
 }
 
@@ -109,6 +111,17 @@ CFCParser_parse(CFCParser *self, const char *string) {
     return self->result;
 }
 
+CFCBase*
+CFCParser_parse_file(CFCParser *self, const char *string,
+                     const char *source_class) {
+    CFCParser_set_parcel(NULL);
+    self->source_class = CFCUtil_strdup(source_class);
+    CFCParseHeader(self->header_parser, CFC_TOKENTYPE_FILE_START, NULL, self);
+    CFCBase *result = CFCParser_parse(self, string);
+    FREEMEM(self->source_class);
+    self->source_class = NULL;
+    return result;
+}
 void
 CFCParser_set_result(CFCParser *self, CFCBase *result)
 {
@@ -186,5 +199,21 @@ CFCParser_set_class_cnick(CFCParser *self, const char *class_cnick) {
 const char*
 CFCParser_get_class_cnick(CFCParser *self) {
     return self->class_cnick;
+}
+
+void
+CFCParser_set_source_class(CFCParser *self, const char *source_class) {
+    FREEMEM(self->source_class);
+    if (source_class) {
+        self->source_class = CFCUtil_strdup(source_class);
+    }
+    else {
+        self->source_class = NULL;
+    }
+}
+
+const char*
+CFCParser_get_source_class(CFCParser *self) {
+    return self->source_class;
 }
 

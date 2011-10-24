@@ -227,6 +227,21 @@ result ::= cblock(A).                    { CFCParser_set_result(state, A); }
 result ::= var_declaration_statement(A). { CFCParser_set_result(state, A); }
 result ::= subroutine_declaration_statement(A). { CFCParser_set_result(state, A); }
 result ::= class_declaration(A).         { CFCParser_set_result(state, A); }
+result ::= file(A).                      { CFCParser_set_result(state, A); }
+
+file(A) ::= FILE_START. /* Pseudo token, not passed by lexer. */
+{
+    A = (CFCBase*)CFCFile_new(CFCParser_get_source_class(state));
+}
+file(A) ::= file(B) major_block(C).
+{
+    A = B;
+    CFCFile_add_block((CFCFile*)A, C);
+}
+
+major_block(A) ::= class_declaration(B). { A = B; }
+major_block(A) ::= cblock(B).            { A = B; }
+major_block(A) ::= parcel_definition(B). { A = B; }
 
 parcel_definition(A) ::= exposure_specifier(B) qualified_id(C) SEMICOLON.
 {

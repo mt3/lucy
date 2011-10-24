@@ -2071,6 +2071,16 @@ CODE:
     RETVAL = S_cfcbase_to_perlref(got);
 OUTPUT: RETVAL
 
+SV*
+_parse_file(self, string, source_class)
+    CFCParser  *self;
+    const char *string;
+    const char *source_class;
+CODE:
+    CFCBase *got = CFCParser_parse_file(self, string, source_class);
+    RETVAL = S_cfcbase_to_perlref(got);
+OUTPUT: RETVAL
+
 void
 set_parcel(unused, parcel)
     SV *unused;
