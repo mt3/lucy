@@ -105,11 +105,13 @@ CFCParser_parse(CFCParser *self, const char *string) {
 
     // Finish up.
     CFCParseHeader(CFCParser_current_parser, 0, NULL, self);
+    CFCBase *result = self->result;
+    self->result = NULL;
     if (self->errors) {
-        CFCBase_decref((CFCBase*)self->result);
-        self->result = NULL;
+        CFCBase_decref((CFCBase*)result);
+        result = NULL;
     }
-    return self->result;
+    return result;
 }
 
 CFCFile*

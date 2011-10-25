@@ -2069,6 +2069,7 @@ parse(self, string)
 CODE:
     CFCBase *got = CFCParser_parse(self, string);
     RETVAL = S_cfcbase_to_perlref(got);
+    CFCBase_decref((CFCBase*)got);
 OUTPUT: RETVAL
 
 SV*
@@ -2079,6 +2080,7 @@ _parse_file(self, string, source_class)
 CODE:
     CFCFile *got = CFCParser_parse_file(self, string, source_class);
     RETVAL = S_cfcbase_to_perlref(got);
+    CFCBase_decref((CFCBase*)got);
 OUTPUT: RETVAL
 
 void

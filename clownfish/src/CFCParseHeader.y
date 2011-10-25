@@ -53,10 +53,9 @@ static const char KW_VOID[]     = "void";
 static const char KW_VA_LIST[]  = "va_list";
 
 static CFCClass*
-S_start_class(CFCParser *state, CFCDocuComment *docucomment,
-              const char *exposure, const char *declaration_modifier_list,
-              const char *class_name, const char *class_cnick,
-              const char *inheritance) {
+S_start_class(CFCParser *state, CFCDocuComment *docucomment, char *exposure,
+              char *declaration_modifier_list, char *class_name,
+              char *class_cnick, char *inheritance) {
     const char *source_class = NULL; /* FIXME derive from file. */
     int is_final = false;
     int is_inert = false;
@@ -66,14 +65,22 @@ S_start_class(CFCParser *state, CFCDocuComment *docucomment,
     }
     CFCParser_set_class_name(state, class_name);
     CFCParser_set_class_cnick(state, class_cnick);
-    return CFCClass_create(CFCParser_get_parcel(), exposure, class_name,
-                           class_cnick, NULL, docucomment, source_class,
-                           inheritance, is_final, is_inert);
+    CFCClass *klass = CFCClass_create(CFCParser_get_parcel(), exposure,
+                                      class_name, class_cnick, NULL,
+                                      docucomment, source_class, inheritance,
+                                      is_final, is_inert);
+    FREEMEM(exposure);
+    FREEMEM(declaration_modifier_list);
+    FREEMEM(class_name);
+    FREEMEM(class_cnick);
+    FREEMEM(inheritance);
+    CFCBase_decref((CFCBase*)docucomment);
+    return klass;
 }
 
 static CFCVariable*
-S_new_var(CFCParser *state, const char *exposure, const char *modifiers,
-          CFCType *type, const char *name) {
+S_new_var(CFCParser *state, char *exposure, char *modifiers, CFCType *type,
+          char *name) {
     int inert = false;
     if (modifiers) {
         if (strcmp(modifiers, "inert") != 0) {
@@ -81,16 +88,24 @@ S_new_var(CFCParser *state, const char *exposure, const char *modifiers,
         }
         inert = true;
     }
-    return CFCVariable_new(CFCParser_get_parcel(), exposure, 
-                           CFCParser_get_class_name(state),
-                           CFCParser_get_class_cnick(state), name, type,
-                           inert);
+    CFCVariable *var = CFCVariable_new(CFCParser_get_parcel(), exposure, 
+                                       CFCParser_get_class_name(state),
+                                       CFCParser_get_class_cnick(state),
+                                       name, type, inert);
+
+    /* Consume tokens. */
+    FREEMEM(exposure);
+    FREEMEM(modifiers);
+    FREEMEM(name);
+    CFCBase_decref((CFCBase*)type);
+
+    return var;
 }
 
 static CFCBase*
 S_new_sub(CFCParser *state, CFCDocuComment *docucomment, 
-          const char *exposure, const char *declaration_modifier_list,
-          CFCType *type, const char *name, CFCParamList *param_list) {
+          char *exposure, char *declaration_modifier_list,
+          CFCType *type, char *name, CFCParamList *param_list) {
     CFCParcel  *parcel      = CFCParser_get_parcel();
     const char *class_name  = CFCParser_get_class_name(state);
     const char *class_cnick = CFCParser_get_class_cnick(state);
@@ -108,21 +123,32 @@ S_new_sub(CFCParser *state, CFCDocuComment *docucomment,
     }
 
     /* If "inert", it's a function, otherwise it's a method. */
+    CFCBase *sub;
     if (is_inert) {
-        return (CFCBase*)CFCFunction_new(parcel, exposure, class_name,
+        sub = (CFCBase*)CFCFunction_new(parcel, exposure, class_name,
                                          class_cnick, name, type, param_list,
                                          docucomment, is_inline);
     }
     else {
-        return (CFCBase*)CFCMethod_new(parcel, exposure, class_name,
+        sub = (CFCBase*)CFCMethod_new(parcel, exposure, class_name,
                                        class_cnick, name, type, param_list,
                                        docucomment, is_final, is_abstract);
     }
+
+    /* Consume tokens. */
+    CFCBase_decref((CFCBase*)docucomment);
+    CFCBase_decref((CFCBase*)type);
+    CFCBase_decref((CFCBase*)param_list);
+    FREEMEM(exposure);
+    FREEMEM(declaration_modifier_list);
+    FREEMEM(name);
+
+    return sub;
 }
 
 static CFCType*
-S_new_type(CFCParser *state, int flags, const char *type_name,
-           const char *asterisk_postfix, const char *array_postfix) {
+S_new_type(CFCParser *state, int flags, char *type_name,
+           char *asterisk_postfix, char *array_postfix) {
     CFCType *type = NULL;
     size_t type_name_len = strlen(type_name);
     int indirection = asterisk_postfix ? strlen(asterisk_postfix) : 0;
@@ -198,6 +224,11 @@ S_new_type(CFCParser *state, int flags, const char *type_name,
         type = composite;
     }
 
+    /* Consume tokens. */
+    FREEMEM(type_name);
+    FREEMEM(asterisk_postfix);
+    FREEMEM(array_postfix);
+
     return type;
 }
 
@@ -256,17 +287,56 @@ S_new_type(CFCParser *state, int flags, const char *type_name,
 %destructor type_qualifier                    { }
 %destructor type_qualifier_list               { }
 
-/* Temporary. */
-result ::= type(A).                             { CFCParser_set_result(state, (CFCBase*)A); }
-result ::= param_list(A).                       { CFCParser_set_result(state, (CFCBase*)A); }
-result ::= param_variable(A).                   { CFCParser_set_result(state, (CFCBase*)A); }
-result ::= docucomment(A).                      { CFCParser_set_result(state, (CFCBase*)A); }
-result ::= parcel_definition(A).                { CFCParser_set_result(state, (CFCBase*)A); }
-result ::= cblock(A).                           { CFCParser_set_result(state, (CFCBase*)A); }
-result ::= var_declaration_statement(A).        { CFCParser_set_result(state, (CFCBase*)A); }
-result ::= subroutine_declaration_statement(A). { CFCParser_set_result(state, (CFCBase*)A); }
-result ::= class_declaration(A).                { CFCParser_set_result(state, (CFCBase*)A); }
-result ::= file(A).                             { CFCParser_set_result(state, (CFCBase*)A); }
+result ::= type(A).
+{
+    CFCParser_set_result(state, (CFCBase*)A);
+    CFCBase_decref((CFCBase*)A);
+}
+result ::= param_list(A).
+{
+    CFCParser_set_result(state, (CFCBase*)A);
+    CFCBase_decref((CFCBase*)A);
+}
+result ::= param_variable(A).
+{
+    CFCParser_set_result(state, (CFCBase*)A);
+    CFCBase_decref((CFCBase*)A);
+}
+result ::= docucomment(A).
+{
+    CFCParser_set_result(state, (CFCBase*)A);
+    CFCBase_decref((CFCBase*)A);
+}
+result ::= parcel_definition(A).
+{
+    CFCParser_set_result(state, (CFCBase*)A);
+    CFCBase_decref((CFCBase*)A);
+}
+result ::= cblock(A).
+{
+    CFCParser_set_result(state, (CFCBase*)A);
+    CFCBase_decref((CFCBase*)A);
+}
+result ::= var_declaration_statement(A).
+{
+    CFCParser_set_result(state, (CFCBase*)A);
+    CFCBase_decref((CFCBase*)A);
+}
+result ::= subroutine_declaration_statement(A).
+{
+    CFCParser_set_result(state, (CFCBase*)A);
+    CFCBase_decref((CFCBase*)A);
+}
+result ::= class_declaration(A).
+{
+    CFCParser_set_result(state, (CFCBase*)A);
+    CFCBase_decref((CFCBase*)A);
+}
+result ::= file(A).
+{
+    CFCParser_set_result(state, (CFCBase*)A);
+    CFCBase_decref((CFCBase*)A);
+}
 
 file(A) ::= FILE_START. /* Pseudo token, not passed by lexer. */
 {
@@ -276,6 +346,7 @@ file(A) ::= file(B) major_block(C).
 {
     A = B;
     CFCFile_add_block(A, C);
+    CFCBase_decref((CFCBase*)C);
 }
 
 major_block(A) ::= class_declaration(B). { A = (CFCBase*)B; }
@@ -293,6 +364,9 @@ parcel_definition(A) ::= exposure_specifier(B) qualified_id(C) SEMICOLON.
          CFCUtil_die("A syntax error was detected when parsing '%s'", B);
     }
     A = CFCParcel_singleton(C, NULL);
+    FREEMEM(B);
+    FREEMEM(C);
+    CFCBase_incref((CFCBase*)A);
     CFCParser_set_parcel(A);
 }
 
@@ -302,6 +376,9 @@ parcel_definition(A) ::= exposure_specifier(B) qualified_id(C) cnick(D) SEMICOLO
          CFCUtil_die("A syntax error was detected when parsing '%s'", B);
     }
     A = CFCParcel_singleton(C, D);
+    FREEMEM(C);
+    FREEMEM(D);
+    CFCBase_incref((CFCBase*)A);
     CFCParser_set_parcel(A);
 }
 
@@ -349,6 +426,7 @@ class_head(A) ::= class_head(B) COLON identifier(C).
 {
     A = B;
     CFCClass_add_attribute(A, C, "1");
+    FREEMEM(C);
 }
 
 class_defs(A) ::= class_head(B) LEFT_CURLY_BRACE.
@@ -364,6 +442,7 @@ class_defs(A) ::= class_defs(B) var_declaration_statement(C).
     else {
         CFCClass_add_member_var(A, C);
     }
+    CFCBase_decref((CFCBase*)C);
 }
 class_defs(A) ::= class_defs(B) subroutine_declaration_statement(C).
 {
@@ -374,12 +453,13 @@ class_defs(A) ::= class_defs(B) subroutine_declaration_statement(C).
     else {
         CFCClass_add_method(A, (CFCMethod*)C);
     }
+    CFCBase_decref((CFCBase*)C);
 }
 
 var_declaration_statement(A) ::= 
     type(D) declarator(E) SEMICOLON.
 {
-    A = S_new_var(state, "parcel", NULL, D, E);
+    A = S_new_var(state, CFCUtil_strdup("parcel"), NULL, D, E);
 }
 var_declaration_statement(A) ::= 
     exposure_specifier(B)
@@ -391,7 +471,7 @@ var_declaration_statement(A) ::=
     declaration_modifier_list(C)
     type(D) declarator(E) SEMICOLON.
 {
-    A = S_new_var(state, "parcel", C, D, E);
+    A = S_new_var(state, CFCUtil_strdup("parcel"), C, D, E);
 }
 var_declaration_statement(A) ::= 
     exposure_specifier(B)
@@ -502,7 +582,7 @@ type_name(A) ::= void_type_specifier(B).     { A = CFCUtil_strdup(B); }
 type_name(A) ::= va_list_specifier(B).       { A = CFCUtil_strdup(B); }
 type_name(A) ::= integer_type_specifier(B).  { A = CFCUtil_strdup(B); }
 type_name(A) ::= float_type_specifier(B).    { A = CFCUtil_strdup(B); }
-type_name(A) ::= identifier(B).              { A = CFCUtil_strdup(B); }
+type_name(A) ::= identifier(B).              { A = B; }
 
 exposure_specifier(A) ::= PUBLIC.  { A = CFCUtil_strdup("public"); }
 exposure_specifier(A) ::= PRIVATE. { A = CFCUtil_strdup("private"); }
@@ -531,11 +611,12 @@ declaration_modifier(A) ::= FINAL.      { A = CFCUtil_strdup("final"); }
 
 declaration_modifier_list(A) ::= declaration_modifier(B).
 {
-    A = CFCUtil_strdup(B);
+    A = B;
 }
 declaration_modifier_list(A) ::= declaration_modifier_list(B) declaration_modifier(C).
 {
-    A = CFCUtil_cat(CFCUtil_strdup(B), " ", C, NULL);
+    A = CFCUtil_cat(B, " ", C, NULL);
+    FREEMEM(C);
 }
 
 asterisk_postfix(A) ::= ASTERISK.
@@ -554,6 +635,7 @@ array_postfix_elem(A) ::= LEFT_SQUARE_BRACKET RIGHT_SQUARE_BRACKET.
 array_postfix_elem(A) ::= LEFT_SQUARE_BRACKET integer_literal(B) RIGHT_SQUARE_BRACKET.
 {
     A = CFCUtil_cat(CFCUtil_strdup(""), "[", B, "]", NULL);
+    FREEMEM(B);
 }
 
 array_postfix(A) ::= array_postfix_elem(B). 
@@ -563,6 +645,7 @@ array_postfix(A) ::= array_postfix_elem(B).
 array_postfix(A) ::= array_postfix(B) array_postfix_elem(C).
 {
     A = CFCUtil_cat(B, C, NULL);
+    FREEMEM(C);
 }
 
 scalar_constant(A) ::= hex_literal(B).     { A = B; }
@@ -592,7 +675,7 @@ string_literal(A) ::= STRING_LITERAL.
 
 declarator(A) ::= identifier(B).
 {
-    A = CFCUtil_strdup(B);
+    A = B;
 }
 
 param_variable(A) ::= type(B) declarator(C).
@@ -617,21 +700,27 @@ param_list_elems(A) ::= param_list_elems(B) COMMA param_variable(C).
 {
     A = B;
     CFCParamList_add_param(A, C, NULL);
+    CFCBase_decref((CFCBase*)C);
 }
 param_list_elems(A) ::= param_list_elems(B) COMMA param_variable(C) EQUALS scalar_constant(D).
 {
     A = B;
     CFCParamList_add_param(A, C, D);
+    CFCBase_decref((CFCBase*)C);
+    FREEMEM(D);
 }
 param_list_elems(A) ::= param_variable(B).
 {
     A = CFCParamList_new(false);
     CFCParamList_add_param(A, B, NULL);
+    CFCBase_decref((CFCBase*)B);
 }
 param_list_elems(A) ::= param_variable(B) EQUALS scalar_constant(C).
 {
     A = CFCParamList_new(false);
     CFCParamList_add_param(A, B, C);
+    CFCBase_decref((CFCBase*)B);
+    FREEMEM(C);
 }
 
 docucomment(A) ::= DOCUCOMMENT.
@@ -646,27 +735,29 @@ identifier(A) ::= IDENTIFIER.
 
 qualified_id(A) ::= identifier(B).
 {
-    A = CFCUtil_strdup(B);
+    A = B;
 }
 
 qualified_id(A) ::= qualified_id(B) SCOPE_OP identifier(C).
 {
-    A = CFCUtil_cat(CFCUtil_strdup(B), "::", C, NULL);
+    A = CFCUtil_cat(B, "::", C, NULL);
+    FREEMEM(C);
 }
 
 class_inheritance(A) ::= INHERITS qualified_id(B).
 {
-    A = CFCUtil_strdup(B);
+    A = B;
 }
 
 cnick(A) ::= CNICK identifier(B).
 {
-    A = CFCUtil_strdup(B);
+    A = B;
 }
 
 cblock(A) ::= CBLOCK_START blob(B) CBLOCK_CLOSE.
 {
     A = CFCCBlock_new(B);
+    FREEMEM(B);
 }
 
 blob(A) ::= BLOB.
