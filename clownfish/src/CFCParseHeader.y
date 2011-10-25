@@ -52,10 +52,11 @@ static const char KW_DOUBLE[]   = "double";
 static const char KW_VOID[]     = "void";
 static const char KW_VA_LIST[]  = "va_list";
 
-static CFCBase*
-S_start_class(CFCParser *state, CFCBase *docucomment, const char *exposure,
-            const char *declaration_modifier_list, const char *class_name,
-            const char *class_cnick, const char *inheritance) {
+static CFCClass*
+S_start_class(CFCParser *state, CFCDocuComment *docucomment,
+              const char *exposure, const char *declaration_modifier_list,
+              const char *class_name, const char *class_cnick,
+              const char *inheritance) {
     const char *source_class = NULL; /* FIXME derive from file. */
     int is_final = false;
     int is_inert = false;
@@ -65,16 +66,14 @@ S_start_class(CFCParser *state, CFCBase *docucomment, const char *exposure,
     }
     CFCParser_set_class_name(state, class_name);
     CFCParser_set_class_cnick(state, class_cnick);
-    return (CFCBase*)CFCClass_create(CFCParser_get_parcel(), exposure,
-                                     class_name, class_cnick, NULL,
-                                     (CFCDocuComment*)docucomment,
-                                     source_class, inheritance, is_final,
-                                     is_inert);
+    return CFCClass_create(CFCParser_get_parcel(), exposure, class_name,
+                           class_cnick, NULL, docucomment, source_class,
+                           inheritance, is_final, is_inert);
 }
 
-static CFCBase*
+static CFCVariable*
 S_new_var(CFCParser *state, const char *exposure, const char *modifiers,
-          CFCBase *type, const char *name) {
+          CFCType *type, const char *name) {
     int inert = false;
     if (modifiers) {
         if (strcmp(modifiers, "inert") != 0) {
@@ -82,16 +81,16 @@ S_new_var(CFCParser *state, const char *exposure, const char *modifiers,
         }
         inert = true;
     }
-    return (CFCBase*)CFCVariable_new(CFCParser_get_parcel(), exposure, 
-                                     CFCParser_get_class_name(state),
-                                     CFCParser_get_class_cnick(state), name,
-                                     (CFCType*)type, inert);
+    return CFCVariable_new(CFCParser_get_parcel(), exposure, 
+                           CFCParser_get_class_name(state),
+                           CFCParser_get_class_cnick(state), name, type,
+                           inert);
 }
 
 static CFCBase*
-S_new_sub(CFCParser *state, CFCBase *docucomment, 
+S_new_sub(CFCParser *state, CFCDocuComment *docucomment, 
           const char *exposure, const char *declaration_modifier_list,
-          CFCBase *type, const char *name, CFCBase *param_list) {
+          CFCType *type, const char *name, CFCParamList *param_list) {
     CFCParcel  *parcel      = CFCParser_get_parcel();
     const char *class_name  = CFCParser_get_class_name(state);
     const char *class_cnick = CFCParser_get_class_cnick(state);
@@ -111,21 +110,17 @@ S_new_sub(CFCParser *state, CFCBase *docucomment,
     /* If "inert", it's a function, otherwise it's a method. */
     if (is_inert) {
         return (CFCBase*)CFCFunction_new(parcel, exposure, class_name,
-                                         class_cnick, name, (CFCType*)type,
-                                         (CFCParamList*)param_list,
-                                         (CFCDocuComment*)docucomment,
-                                         is_inline);
+                                         class_cnick, name, type, param_list,
+                                         docucomment, is_inline);
     }
     else {
         return (CFCBase*)CFCMethod_new(parcel, exposure, class_name,
-                                       class_cnick, name,(CFCType*)type,
-                                       (CFCParamList*)param_list,
-                                       (CFCDocuComment*)docucomment, is_final,
-                                       is_abstract);
+                                       class_cnick, name, type, param_list,
+                                       docucomment, is_final, is_abstract);
     }
 }
 
-static CFCBase*
+static CFCType*
 S_new_type(CFCParser *state, int flags, const char *type_name,
            const char *asterisk_postfix, const char *array_postfix) {
     CFCType *type = NULL;
@@ -203,7 +198,7 @@ S_new_type(CFCParser *state, int flags, const char *type_name,
         type = composite;
     }
 
-    return (CFCBase*)type;
+    return type;
 }
 
 } /* End include block. */
@@ -218,20 +213,20 @@ S_new_type(CFCParser *state, int flags, const char *type_name,
 }
 
 %type result                            {CFCBase*}
-%type file                              {CFCBase*}
+%type file                              {CFCFile*}
 %type major_block                       {CFCBase*}
-%type parcel_definition                 {CFCBase*}
-%type class_declaration                 {CFCBase*}
-%type class_head                        {CFCBase*}
-%type class_defs                        {CFCBase*}
-%type var_declaration_statement         {CFCBase*}
+%type parcel_definition                 {CFCParcel*}
+%type class_declaration                 {CFCClass*}
+%type class_head                        {CFCClass*}
+%type class_defs                        {CFCClass*}
+%type var_declaration_statement         {CFCVariable*}
 %type subroutine_declaration_statement  {CFCBase*}
-%type type                              {CFCBase*}
-%type param_variable                    {CFCBase*}
-%type param_list                        {CFCBase*}
-%type param_list_elems                  {CFCBase*}
-%type docucomment                       {CFCBase*}
-%type cblock                            {CFCBase*}
+%type type                              {CFCType*}
+%type param_variable                    {CFCVariable*}
+%type param_list                        {CFCParamList*}
+%type param_list_elems                  {CFCParamList*}
+%type docucomment                       {CFCDocuComment*}
+%type cblock                            {CFCCBlock*}
 %type void_type_specifier               {const char*}
 %type va_list_specifier                 {const char*}
 %type float_type_specifier              {const char*}
@@ -262,30 +257,30 @@ S_new_type(CFCParser *state, int flags, const char *type_name,
 %destructor type_qualifier_list               { }
 
 /* Temporary. */
-result ::= type(A).                      { CFCParser_set_result(state, A); }
-result ::= param_list(A).                { CFCParser_set_result(state, A); }
-result ::= param_variable(A).            { CFCParser_set_result(state, A); }
-result ::= docucomment(A).               { CFCParser_set_result(state, A); }
-result ::= parcel_definition(A).         { CFCParser_set_result(state, A); }
-result ::= cblock(A).                    { CFCParser_set_result(state, A); }
-result ::= var_declaration_statement(A). { CFCParser_set_result(state, A); }
-result ::= subroutine_declaration_statement(A). { CFCParser_set_result(state, A); }
-result ::= class_declaration(A).         { CFCParser_set_result(state, A); }
-result ::= file(A).                      { CFCParser_set_result(state, A); }
+result ::= type(A).                             { CFCParser_set_result(state, (CFCBase*)A); }
+result ::= param_list(A).                       { CFCParser_set_result(state, (CFCBase*)A); }
+result ::= param_variable(A).                   { CFCParser_set_result(state, (CFCBase*)A); }
+result ::= docucomment(A).                      { CFCParser_set_result(state, (CFCBase*)A); }
+result ::= parcel_definition(A).                { CFCParser_set_result(state, (CFCBase*)A); }
+result ::= cblock(A).                           { CFCParser_set_result(state, (CFCBase*)A); }
+result ::= var_declaration_statement(A).        { CFCParser_set_result(state, (CFCBase*)A); }
+result ::= subroutine_declaration_statement(A). { CFCParser_set_result(state, (CFCBase*)A); }
+result ::= class_declaration(A).                { CFCParser_set_result(state, (CFCBase*)A); }
+result ::= file(A).                             { CFCParser_set_result(state, (CFCBase*)A); }
 
 file(A) ::= FILE_START. /* Pseudo token, not passed by lexer. */
 {
-    A = (CFCBase*)CFCFile_new(CFCParser_get_source_class(state));
+    A = CFCFile_new(CFCParser_get_source_class(state));
 }
 file(A) ::= file(B) major_block(C).
 {
     A = B;
-    CFCFile_add_block((CFCFile*)A, C);
+    CFCFile_add_block(A, C);
 }
 
-major_block(A) ::= class_declaration(B). { A = B; }
-major_block(A) ::= cblock(B).            { A = B; }
-major_block(A) ::= parcel_definition(B). { A = B; }
+major_block(A) ::= class_declaration(B). { A = (CFCBase*)B; }
+major_block(A) ::= cblock(B).            { A = (CFCBase*)B; }
+major_block(A) ::= parcel_definition(B). { A = (CFCBase*)B; }
 
 parcel_definition(A) ::= exposure_specifier(B) qualified_id(C) SEMICOLON.
 {
@@ -297,8 +292,8 @@ parcel_definition(A) ::= exposure_specifier(B) qualified_id(C) SEMICOLON.
          * declaration and exposure specifier). */
          CFCUtil_die("A syntax error was detected when parsing '%s'", B);
     }
-    A = (CFCBase*)CFCParcel_singleton(C, NULL);
-    CFCParser_set_parcel((CFCParcel*)A);
+    A = CFCParcel_singleton(C, NULL);
+    CFCParser_set_parcel(A);
 }
 
 parcel_definition(A) ::= exposure_specifier(B) qualified_id(C) cnick(D) SEMICOLON.
@@ -306,8 +301,8 @@ parcel_definition(A) ::= exposure_specifier(B) qualified_id(C) cnick(D) SEMICOLO
     if (strcmp(B, "parcel") != 0) {
          CFCUtil_die("A syntax error was detected when parsing '%s'", B);
     }
-    A = (CFCBase*)CFCParcel_singleton(C, D);
-    CFCParser_set_parcel((CFCParcel*)A);
+    A = CFCParcel_singleton(C, D);
+    CFCParser_set_parcel(A);
 }
 
 class_declaration(A) ::= class_defs(B) RIGHT_CURLY_BRACE.
@@ -353,7 +348,7 @@ class_head(A) ::=                                                               
 class_head(A) ::= class_head(B) COLON identifier(C).
 {
     A = B;
-    CFCClass_add_attribute((CFCClass*)A, C, "1");
+    CFCClass_add_attribute(A, C, "1");
 }
 
 class_defs(A) ::= class_head(B) LEFT_CURLY_BRACE.
@@ -363,21 +358,21 @@ class_defs(A) ::= class_head(B) LEFT_CURLY_BRACE.
 class_defs(A) ::= class_defs(B) var_declaration_statement(C).
 {
     A = B;
-    if (CFCVariable_inert((CFCVariable*)C)) {
-        CFCClass_add_inert_var((CFCClass*)A, (CFCVariable*)C);
+    if (CFCVariable_inert(C)) {
+        CFCClass_add_inert_var(A, C);
     }
     else {
-        CFCClass_add_member_var((CFCClass*)A, (CFCVariable*)C);
+        CFCClass_add_member_var(A, C);
     }
 }
 class_defs(A) ::= class_defs(B) subroutine_declaration_statement(C).
 {
     A = B;
     if (strcmp(CFCBase_get_cfc_class(C), "Clownfish::Function") == 0) {
-        CFCClass_add_function((CFCClass*)A, (CFCFunction*)C);
+        CFCClass_add_function(A, (CFCFunction*)C);
     }
     else {
-        CFCClass_add_method((CFCClass*)A, (CFCMethod*)C);
+        CFCClass_add_method(A, (CFCMethod*)C);
     }
 }
 
@@ -607,7 +602,7 @@ param_variable(A) ::= type(B) declarator(C).
 
 param_list(A) ::= LEFT_PAREN RIGHT_PAREN.
 {
-    A = (CFCBase*)CFCParamList_new(false);
+    A = CFCParamList_new(false);
 }
 param_list(A) ::= LEFT_PAREN param_list_elems(B) RIGHT_PAREN.
 {
@@ -616,32 +611,32 @@ param_list(A) ::= LEFT_PAREN param_list_elems(B) RIGHT_PAREN.
 param_list(A) ::= LEFT_PAREN param_list_elems(B) COMMA ELLIPSIS RIGHT_PAREN.
 {
     A = B;
-    CFCParamList_set_variadic((CFCParamList*)A, true);
+    CFCParamList_set_variadic(A, true);
 }
 param_list_elems(A) ::= param_list_elems(B) COMMA param_variable(C).
 {
     A = B;
-    CFCParamList_add_param((CFCParamList*)A, (CFCVariable*)C, NULL);
+    CFCParamList_add_param(A, C, NULL);
 }
 param_list_elems(A) ::= param_list_elems(B) COMMA param_variable(C) EQUALS scalar_constant(D).
 {
     A = B;
-    CFCParamList_add_param((CFCParamList*)A, (CFCVariable*)C, D);
+    CFCParamList_add_param(A, C, D);
 }
 param_list_elems(A) ::= param_variable(B).
 {
-    A = (CFCBase*)CFCParamList_new(false);
-    CFCParamList_add_param((CFCParamList*)A, (CFCVariable*)B, NULL);
+    A = CFCParamList_new(false);
+    CFCParamList_add_param(A, B, NULL);
 }
 param_list_elems(A) ::= param_variable(B) EQUALS scalar_constant(C).
 {
-    A = (CFCBase*)CFCParamList_new(false);
-    CFCParamList_add_param((CFCParamList*)A, (CFCVariable*)B, C);
+    A = CFCParamList_new(false);
+    CFCParamList_add_param(A, B, C);
 }
 
 docucomment(A) ::= DOCUCOMMENT.
 {
-    A = (CFCBase*)CFCDocuComment_parse(CFCParser_get_text(state));
+    A = CFCDocuComment_parse(CFCParser_get_text(state));
 }
 
 identifier(A) ::= IDENTIFIER.
@@ -671,7 +666,7 @@ cnick(A) ::= CNICK identifier(B).
 
 cblock(A) ::= CBLOCK_START blob(B) CBLOCK_CLOSE.
 {
-    A = (CFCBase*)CFCCBlock_new(B);
+    A = CFCCBlock_new(B);
 }
 
 blob(A) ::= BLOB.
