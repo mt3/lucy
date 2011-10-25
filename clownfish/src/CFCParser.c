@@ -21,6 +21,7 @@
 #include "CFCBase.h"
 #include "CFCParser.h"
 #include "CFCParcel.h"
+#include "CFCFile.h"
 #include "CFCUtil.h"
 #include "CFCLexHeader.h"
 #include "CFCParseHeader.h"
@@ -111,17 +112,18 @@ CFCParser_parse(CFCParser *self, const char *string) {
     return self->result;
 }
 
-CFCBase*
+CFCFile*
 CFCParser_parse_file(CFCParser *self, const char *string,
                      const char *source_class) {
     CFCParser_set_parcel(NULL);
     self->source_class = CFCUtil_strdup(source_class);
     CFCParseHeader(self->header_parser, CFC_TOKENTYPE_FILE_START, NULL, self);
-    CFCBase *result = CFCParser_parse(self, string);
+    CFCFile *result = (CFCFile*)CFCParser_parse(self, string);
     FREEMEM(self->source_class);
     self->source_class = NULL;
     return result;
 }
+
 void
 CFCParser_set_result(CFCParser *self, CFCBase *result)
 {

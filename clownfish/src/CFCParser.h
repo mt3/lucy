@@ -24,6 +24,7 @@ extern "C" {
 typedef struct CFCParser CFCParser;
 struct CFCBase;
 struct CFCParcel;
+struct CFCFile;
 
 extern CFCParser *CFCParser_current_state;
 extern void      *CFCParser_current_parser;
@@ -40,7 +41,7 @@ CFCParser_destroy(CFCParser *self);
 struct CFCBase*
 CFCParser_parse(CFCParser *self, const char *string);
 
-struct CFCBase*
+struct CFCFile*
 CFCParser_parse_file(CFCParser *self, const char *string,
                      const char *source_class);
 

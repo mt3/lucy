@@ -2077,7 +2077,7 @@ _parse_file(self, string, source_class)
     const char *string;
     const char *source_class;
 CODE:
-    CFCBase *got = CFCParser_parse_file(self, string, source_class);
+    CFCFile *got = CFCParser_parse_file(self, string, source_class);
     RETVAL = S_cfcbase_to_perlref(got);
 OUTPUT: RETVAL
 
