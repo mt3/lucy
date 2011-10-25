@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-%token_type { CFCBase* }
-%token_destructor { CFCBase_decref((CFCBase*)$$); }
+%token_type {char*}
+%token_destructor { FREEMEM($$); }
 %token_prefix CFC_TOKENTYPE_
 
 %extra_argument { CFCParser *state }
@@ -216,6 +216,50 @@ S_new_type(CFCParser *state, int flags, const char *type_name,
 %parse_accept {
     CFCParser_set_text(state, NULL, 0);
 }
+
+%type result                            {CFCBase*}
+%type file                              {CFCBase*}
+%type major_block                       {CFCBase*}
+%type parcel_definition                 {CFCBase*}
+%type class_declaration                 {CFCBase*}
+%type class_head                        {CFCBase*}
+%type class_defs                        {CFCBase*}
+%type var_declaration_statement         {CFCBase*}
+%type subroutine_declaration_statement  {CFCBase*}
+%type type                              {CFCBase*}
+%type param_variable                    {CFCBase*}
+%type param_list                        {CFCBase*}
+%type param_list_elems                  {CFCBase*}
+%type docucomment                       {CFCBase*}
+%type cblock                            {CFCBase*}
+%type void_type_specifier               {const char*}
+%type va_list_specifier                 {const char*}
+%type float_type_specifier              {const char*}
+%type integer_type_specifier            {const char*}
+%type type_qualifier                    {int}
+%type type_qualifier_list               {int}
+
+%destructor result                            { CFCBase_decref((CFCBase*)$$); }
+%destructor file                              { CFCBase_decref((CFCBase*)$$); }
+%destructor major_block                       { CFCBase_decref((CFCBase*)$$); }
+%destructor parcel_definition                 { CFCBase_decref((CFCBase*)$$); }
+%destructor class_declaration                 { CFCBase_decref((CFCBase*)$$); }
+%destructor class_head                        { CFCBase_decref((CFCBase*)$$); }
+%destructor class_defs                        { CFCBase_decref((CFCBase*)$$); }
+%destructor var_declaration_statement         { CFCBase_decref((CFCBase*)$$); }
+%destructor subroutine_declaration_statement  { CFCBase_decref((CFCBase*)$$); }
+%destructor type                              { CFCBase_decref((CFCBase*)$$); }
+%destructor param_variable                    { CFCBase_decref((CFCBase*)$$); }
+%destructor param_list                        { CFCBase_decref((CFCBase*)$$); }
+%destructor param_list_elems                  { CFCBase_decref((CFCBase*)$$); }
+%destructor docucomment                       { CFCBase_decref((CFCBase*)$$); }
+%destructor cblock                            { CFCBase_decref((CFCBase*)$$); }
+%destructor void_type_specifier               { }
+%destructor va_list_specifier                 { }
+%destructor float_type_specifier              { }
+%destructor integer_type_specifier            { }
+%destructor type_qualifier                    { }
+%destructor type_qualifier_list               { }
 
 /* Temporary. */
 result ::= type(A).                      { CFCParser_set_result(state, A); }
@@ -439,57 +483,6 @@ type(A) ::= type_qualifier_list(B) type_name(C) array_postfix(E).
 {
     A = S_new_type(state, B, C, NULL, E);
 }
-
-%type identifier                    {char*}
-%type type_name                     {char*}
-%type exposure_specifier            {char*}
-%type void_type_specifier           {const char*}
-%type va_list_specifier             {const char*}
-%type float_type_specifier          {const char*}
-%type integer_type_specifier        {const char*}
-%type object_type_specifier         {char*}
-%type type_qualifier                {int}
-%type type_qualifier_list           {int}
-%type declaration_modifier          {char*}
-%type declaration_modifier_list     {char*}
-%type scalar_constant               {char*}
-%type integer_literal               {char*}
-%type float_literal                 {char*}
-%type hex_literal                   {char*}
-%type string_literal                {char*}
-%type asterisk_postfix              {char*}
-%type array_postfix                 {char*}
-%type array_postfix_elem            {char*}
-%type declarator                    {char*}
-%type qualified_id                  {char*}
-%type class_inheritance             {char*}
-%type cnick                         {char*}
-%type blob                          {char*}
-%destructor identifier                  { FREEMEM($$); }
-%destructor type_name                   { FREEMEM($$); }
-%destructor exposure_specifier          { FREEMEM($$); }
-%destructor void_type_specifier         { }
-%destructor va_list_specifier           { }
-%destructor float_type_specifier        { }
-%destructor integer_type_specifier      { }
-%destructor object_type_specifier       { FREEMEM($$); }
-%destructor type_qualifier              { }
-%destructor type_qualifier_list         { }
-%destructor declaration_modifier        { FREEMEM($$); }
-%destructor declaration_modifier_list   { FREEMEM($$); }
-%destructor scalar_constant             { FREEMEM($$); }
-%destructor integer_literal             { FREEMEM($$); }
-%destructor float_literal               { FREEMEM($$); }
-%destructor hex_literal                 { FREEMEM($$); }
-%destructor string_literal              { FREEMEM($$); }
-%destructor asterisk_postfix            { FREEMEM($$); }
-%destructor array_postfix               { FREEMEM($$); }
-%destructor array_postfix_elem          { FREEMEM($$); }
-%destructor declarator                  { FREEMEM($$); }
-%destructor qualified_id                { FREEMEM($$); }
-%destructor class_inheritance           { FREEMEM($$); }
-%destructor cnick                       { FREEMEM($$); }
-%destructor blob                        { FREEMEM($$); }
 
 void_type_specifier(A)    ::= VOID.      { A = KW_VOID; }
 va_list_specifier(A)      ::= VA_LIST.   { A = KW_VA_LIST; }
