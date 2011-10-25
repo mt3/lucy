@@ -19,21 +19,17 @@
     #include "CFCParseHeader.h"
 
     void
-    CFCParseHeader(void *header_parser, int token_type, CFCBase *value,
+    CFCParseHeader(void *header_parser, int token_type, char *value,
                    CFCParser *state);
     /* Invoke Lemon-generated parser. */
     #define PARSE(token_type) \
         CFCParseHeader(CFCParser_current_parser, token_type, NULL, \
             CFCParser_current_state)
 
-    /* Copy yytext and then invoke parser. */
+    /* Dupe yytext and invoke parser. */
     #define SAVE_AND_PARSE(token_type) \
-        S_save_and_parse(token_type)
-    static void
-    S_save_and_parse(int token_type) {
-        CFCParser_set_text(CFCParser_current_state, yytext, yyleng);
-        PARSE(token_type);
-    }
+        CFCParseHeader(CFCParser_current_parser, token_type, \
+			CFCUtil_strdup(yytext), CFCParser_current_state)
 %}
 
 CLASS_NAME_COMPONENT    [A-Z]+[A-Z0-9]*[a-z]+[A-Za-z0-9]*

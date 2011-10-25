@@ -47,8 +47,6 @@ struct CFCParser {
     void *header_parser;
     struct CFCBase *result;
     int errors;
-    char *text;
-    size_t cap;
     char *class_name;
     char *class_cnick;
     char *source_class;
@@ -69,8 +67,6 @@ CFCParser_init(CFCParser *self) {
     }
     self->result       = NULL;
     self->errors       = false;
-    self->text         = NULL;
-    self->cap          = 0;
     self->class_name   = NULL;
     self->class_cnick  = NULL;
     self->source_class = NULL;
@@ -80,7 +76,6 @@ CFCParser_init(CFCParser *self) {
 void
 CFCParser_destroy(CFCParser *self) {
     CFCParseHeaderFree(self->header_parser, free);
-    FREEMEM(self->text);
     FREEMEM(self->class_name);
     FREEMEM(self->class_cnick);
     CFCBase_decref(self->result);
@@ -137,28 +132,6 @@ void
 CFCParser_set_errors(CFCParser *self, int errors)
 {
     self->errors = errors;
-}
-
-void
-CFCParser_set_text(CFCParser *self, const char *text, size_t len) {
-    if (text) {
-        if (len >= self->cap) {
-            self->cap = len + 1;
-            self->text = REALLOCATE(self->text, self->cap);
-        }
-        memcpy(self->text, text, len);
-        self->text[len] = '\0';
-    }
-    else {
-        FREEMEM(self->text);
-        self->cap = 0;
-        self->text = NULL;
-    }
-}
-
-const char*
-CFCParser_get_text(CFCParser *self) {
-    return self->text;
 }
 
 void

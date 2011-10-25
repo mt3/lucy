@@ -194,8 +194,7 @@ S_new_type(CFCParser *state, int flags, char *type_name,
     else if (type_name_len > 2
              && !strcmp(type_name + type_name_len - 2, "_t")
             ) {
-        type = CFCType_new_arbitrary(CFCParser_get_parcel(),
-                                     CFCParser_get_text(state));
+        type = CFCType_new_arbitrary(CFCParser_get_parcel(), type_name);
     }
     else if (indirection > 0) {
         /* The only remaining possibility is an object type, and we can let
@@ -236,11 +235,6 @@ S_new_type(CFCParser *state, int flags, char *type_name,
 
 %syntax_error {
     CFCParser_set_errors(state, true);
-    CFCParser_set_text(state, NULL, 0);
-}
-
-%parse_accept {
-    CFCParser_set_text(state, NULL, 0);
 }
 
 %type result                            {CFCBase*}
@@ -656,22 +650,10 @@ scalar_constant(A) ::= TRUE.     { A = CFCUtil_strdup("true"); }
 scalar_constant(A) ::= FALSE.    { A = CFCUtil_strdup("false"); }
 scalar_constant(A) ::= NULL.     { A = CFCUtil_strdup("NULL"); }
 
-integer_literal(A) ::= INTEGER_LITERAL.
-{
-    A = CFCUtil_strdup(CFCParser_get_text(state));
-}
-float_literal(A) ::= FLOAT_LITERAL.
-{
-    A = CFCUtil_strdup(CFCParser_get_text(state));
-}
-hex_literal(A) ::= HEX_LITERAL.
-{
-    A = CFCUtil_strdup(CFCParser_get_text(state));
-}
-string_literal(A) ::= STRING_LITERAL.
-{
-    A = CFCUtil_strdup(CFCParser_get_text(state));
-}
+hex_literal(A)     ::= HEX_LITERAL(B).     { A = B; }
+float_literal(A)   ::= FLOAT_LITERAL(B).   { A = B; }
+integer_literal(A) ::= INTEGER_LITERAL(B). { A = B; }
+string_literal(A)  ::= STRING_LITERAL(B).  { A = B; }
 
 declarator(A) ::= identifier(B).
 {
@@ -723,14 +705,14 @@ param_list_elems(A) ::= param_variable(B) EQUALS scalar_constant(C).
     FREEMEM(C);
 }
 
-docucomment(A) ::= DOCUCOMMENT.
+docucomment(A) ::= DOCUCOMMENT(B).
 {
-    A = CFCDocuComment_parse(CFCParser_get_text(state));
+    A = CFCDocuComment_parse(B);
 }
 
-identifier(A) ::= IDENTIFIER.
+identifier(A) ::= IDENTIFIER(B).
 {
-    A = CFCUtil_strdup(CFCParser_get_text(state));
+    A = B;
 }
 
 qualified_id(A) ::= identifier(B).
@@ -760,7 +742,7 @@ cblock(A) ::= CBLOCK_START blob(B) CBLOCK_CLOSE.
     FREEMEM(B);
 }
 
-blob(A) ::= BLOB.
+blob(A) ::= BLOB(B).
 {
-    A = CFCUtil_strdup(CFCParser_get_text(state));
+    A = B;
 }
