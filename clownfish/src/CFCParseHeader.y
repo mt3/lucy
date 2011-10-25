@@ -17,7 +17,6 @@
  */
 
 %token_type {char*}
-%token_destructor { FREEMEM($$); }
 %token_prefix CFC_TOKENTYPE_
 
 %extra_argument { CFCParser *state }
@@ -69,11 +68,6 @@ S_start_class(CFCParser *state, CFCDocuComment *docucomment, char *exposure,
                                       class_name, class_cnick, NULL,
                                       docucomment, source_class, inheritance,
                                       is_final, is_inert);
-    FREEMEM(exposure);
-    FREEMEM(declaration_modifier_list);
-    FREEMEM(class_name);
-    FREEMEM(class_cnick);
-    FREEMEM(inheritance);
     CFCBase_decref((CFCBase*)docucomment);
     return klass;
 }
@@ -94,9 +88,6 @@ S_new_var(CFCParser *state, char *exposure, char *modifiers, CFCType *type,
                                        name, type, inert);
 
     /* Consume tokens. */
-    FREEMEM(exposure);
-    FREEMEM(modifiers);
-    FREEMEM(name);
     CFCBase_decref((CFCBase*)type);
 
     return var;
@@ -139,9 +130,6 @@ S_new_sub(CFCParser *state, CFCDocuComment *docucomment,
     CFCBase_decref((CFCBase*)docucomment);
     CFCBase_decref((CFCBase*)type);
     CFCBase_decref((CFCBase*)param_list);
-    FREEMEM(exposure);
-    FREEMEM(declaration_modifier_list);
-    FREEMEM(name);
 
     return sub;
 }
@@ -222,11 +210,6 @@ S_new_type(CFCParser *state, int flags, char *type_name,
         CFCBase_decref((CFCBase*)type);
         type = composite;
     }
-
-    /* Consume tokens. */
-    FREEMEM(type_name);
-    FREEMEM(asterisk_postfix);
-    FREEMEM(array_postfix);
 
     return type;
 }
@@ -358,8 +341,6 @@ parcel_definition(A) ::= exposure_specifier(B) qualified_id(C) SEMICOLON.
          CFCUtil_die("A syntax error was detected when parsing '%s'", B);
     }
     A = CFCParcel_singleton(C, NULL);
-    FREEMEM(B);
-    FREEMEM(C);
     CFCBase_incref((CFCBase*)A);
     CFCParser_set_parcel(A);
 }
@@ -370,8 +351,6 @@ parcel_definition(A) ::= exposure_specifier(B) qualified_id(C) cnick(D) SEMICOLO
          CFCUtil_die("A syntax error was detected when parsing '%s'", B);
     }
     A = CFCParcel_singleton(C, D);
-    FREEMEM(C);
-    FREEMEM(D);
     CFCBase_incref((CFCBase*)A);
     CFCParser_set_parcel(A);
 }
@@ -420,7 +399,6 @@ class_head(A) ::= class_head(B) COLON identifier(C).
 {
     A = B;
     CFCClass_add_attribute(A, C, "1");
-    FREEMEM(C);
 }
 
 class_defs(A) ::= class_head(B) LEFT_CURLY_BRACE.
@@ -453,7 +431,7 @@ class_defs(A) ::= class_defs(B) subroutine_declaration_statement(C).
 var_declaration_statement(A) ::= 
     type(D) declarator(E) SEMICOLON.
 {
-    A = S_new_var(state, CFCUtil_strdup("parcel"), NULL, D, E);
+    A = S_new_var(state, CFCParser_dupe(state, "parcel"), NULL, D, E);
 }
 var_declaration_statement(A) ::= 
     exposure_specifier(B)
@@ -465,7 +443,7 @@ var_declaration_statement(A) ::=
     declaration_modifier_list(C)
     type(D) declarator(E) SEMICOLON.
 {
-    A = S_new_var(state, CFCUtil_strdup("parcel"), C, D, E);
+    A = S_new_var(state, CFCParser_dupe(state, "parcel"), C, D, E);
 }
 var_declaration_statement(A) ::= 
     exposure_specifier(B)
@@ -572,16 +550,16 @@ integer_type_specifier(A) ::= BOOL_T.    { A = KW_BOOL_T; }
 float_type_specifier(A) ::= FLOAT.   { A = KW_FLOAT; }
 float_type_specifier(A) ::= DOUBLE.  { A = KW_DOUBLE; }
 
-type_name(A) ::= void_type_specifier(B).     { A = CFCUtil_strdup(B); }
-type_name(A) ::= va_list_specifier(B).       { A = CFCUtil_strdup(B); }
-type_name(A) ::= integer_type_specifier(B).  { A = CFCUtil_strdup(B); }
-type_name(A) ::= float_type_specifier(B).    { A = CFCUtil_strdup(B); }
+type_name(A) ::= void_type_specifier(B).     { A = CFCParser_dupe(state, B); }
+type_name(A) ::= va_list_specifier(B).       { A = CFCParser_dupe(state, B); }
+type_name(A) ::= integer_type_specifier(B).  { A = CFCParser_dupe(state, B); }
+type_name(A) ::= float_type_specifier(B).    { A = CFCParser_dupe(state, B); }
 type_name(A) ::= identifier(B).              { A = B; }
 
-exposure_specifier(A) ::= PUBLIC.  { A = CFCUtil_strdup("public"); }
-exposure_specifier(A) ::= PRIVATE. { A = CFCUtil_strdup("private"); }
-exposure_specifier(A) ::= PARCEL.  { A = CFCUtil_strdup("parcel"); }
-exposure_specifier(A) ::= LOCAL.   { A = CFCUtil_strdup("local"); }
+exposure_specifier(A) ::= PUBLIC.  { A = CFCParser_dupe(state, "public"); }
+exposure_specifier(A) ::= PRIVATE. { A = CFCParser_dupe(state, "private"); }
+exposure_specifier(A) ::= PARCEL.  { A = CFCParser_dupe(state, "parcel"); }
+exposure_specifier(A) ::= LOCAL.   { A = CFCParser_dupe(state, "local"); }
 
 type_qualifier(A) ::= CONST.       { A = CFCTYPE_CONST; }
 type_qualifier(A) ::= NULLABLE.    { A = CFCTYPE_NULLABLE; }
@@ -598,10 +576,10 @@ type_qualifier_list(A) ::= type_qualifier_list(B) type_qualifier(C).
     A |= C;
 }
 
-declaration_modifier(A) ::= INERT.      { A = CFCUtil_strdup("inert"); }
-declaration_modifier(A) ::= INLINE.     { A = CFCUtil_strdup("inline"); }
-declaration_modifier(A) ::= ABSTRACT.   { A = CFCUtil_strdup("abstract"); }
-declaration_modifier(A) ::= FINAL.      { A = CFCUtil_strdup("final"); }
+declaration_modifier(A) ::= INERT.      { A = CFCParser_dupe(state, "inert"); }
+declaration_modifier(A) ::= INLINE.     { A = CFCParser_dupe(state, "inline"); }
+declaration_modifier(A) ::= ABSTRACT.   { A = CFCParser_dupe(state, "abstract"); }
+declaration_modifier(A) ::= FINAL.      { A = CFCParser_dupe(state, "final"); }
 
 declaration_modifier_list(A) ::= declaration_modifier(B).
 {
@@ -609,27 +587,31 @@ declaration_modifier_list(A) ::= declaration_modifier(B).
 }
 declaration_modifier_list(A) ::= declaration_modifier_list(B) declaration_modifier(C).
 {
-    A = CFCUtil_cat(B, " ", C, NULL);
-    FREEMEM(C);
+    size_t size = strlen(B) + strlen(C) + 2;
+    A = (char*)CFCParser_allocate(state, size);
+    sprintf(A, "%s %s", B, C);
 }
 
 asterisk_postfix(A) ::= ASTERISK.
 {
-    A = CFCUtil_strdup("*");
+    A = CFCParser_dupe(state, "*");
 }
 asterisk_postfix(A) ::= asterisk_postfix(B) ASTERISK.
 {
-    A = CFCUtil_cat(B, "*", NULL);
+    size_t size = strlen(B) + 2;
+    A = (char*)CFCParser_allocate(state, size);
+    sprintf(A, "%s*", B);
 }
 
 array_postfix_elem(A) ::= LEFT_SQUARE_BRACKET RIGHT_SQUARE_BRACKET.
 {
-    A = CFCUtil_strdup("[]");
+    A = CFCParser_dupe(state, "[]");
 }
 array_postfix_elem(A) ::= LEFT_SQUARE_BRACKET integer_literal(B) RIGHT_SQUARE_BRACKET.
 {
-    A = CFCUtil_cat(CFCUtil_strdup(""), "[", B, "]", NULL);
-    FREEMEM(B);
+    size_t size = strlen(B) + 3;
+    A = (char*)CFCParser_allocate(state, size);
+    sprintf(A, "[%s]", B);
 }
 
 array_postfix(A) ::= array_postfix_elem(B). 
@@ -638,17 +620,18 @@ array_postfix(A) ::= array_postfix_elem(B).
 }
 array_postfix(A) ::= array_postfix(B) array_postfix_elem(C).
 {
-    A = CFCUtil_cat(B, C, NULL);
-    FREEMEM(C);
+    size_t size = strlen(B) + strlen(C) + 1;
+    A = (char*)CFCParser_allocate(state, size);
+    sprintf(A, "%s%s", B, C);
 }
 
 scalar_constant(A) ::= hex_literal(B).     { A = B; }
 scalar_constant(A) ::= float_literal(B).   { A = B; }
 scalar_constant(A) ::= integer_literal(B). { A = B; }
 scalar_constant(A) ::= string_literal(B).  { A = B; }
-scalar_constant(A) ::= TRUE.     { A = CFCUtil_strdup("true"); }
-scalar_constant(A) ::= FALSE.    { A = CFCUtil_strdup("false"); }
-scalar_constant(A) ::= NULL.     { A = CFCUtil_strdup("NULL"); }
+scalar_constant(A) ::= TRUE.     { A = CFCParser_dupe(state, "true"); }
+scalar_constant(A) ::= FALSE.    { A = CFCParser_dupe(state, "false"); }
+scalar_constant(A) ::= NULL.     { A = CFCParser_dupe(state, "NULL"); }
 
 hex_literal(A)     ::= HEX_LITERAL(B).     { A = B; }
 float_literal(A)   ::= FLOAT_LITERAL(B).   { A = B; }
@@ -689,7 +672,6 @@ param_list_elems(A) ::= param_list_elems(B) COMMA param_variable(C) EQUALS scala
     A = B;
     CFCParamList_add_param(A, C, D);
     CFCBase_decref((CFCBase*)C);
-    FREEMEM(D);
 }
 param_list_elems(A) ::= param_variable(B).
 {
@@ -702,7 +684,6 @@ param_list_elems(A) ::= param_variable(B) EQUALS scalar_constant(C).
     A = CFCParamList_new(false);
     CFCParamList_add_param(A, B, C);
     CFCBase_decref((CFCBase*)B);
-    FREEMEM(C);
 }
 
 docucomment(A) ::= DOCUCOMMENT(B).
@@ -722,8 +703,9 @@ qualified_id(A) ::= identifier(B).
 
 qualified_id(A) ::= qualified_id(B) SCOPE_OP identifier(C).
 {
-    A = CFCUtil_cat(B, "::", C, NULL);
-    FREEMEM(C);
+    size_t size = strlen(B) + strlen(C) + 3;
+    A = (char*)CFCParser_allocate(state, size);
+    sprintf(A, "%s::%s", B, C);
 }
 
 class_inheritance(A) ::= INHERITS qualified_id(B).
@@ -739,7 +721,6 @@ cnick(A) ::= CNICK identifier(B).
 cblock(A) ::= CBLOCK_START blob(B) CBLOCK_CLOSE.
 {
     A = CFCCBlock_new(B);
-    FREEMEM(B);
 }
 
 blob(A) ::= BLOB(B).

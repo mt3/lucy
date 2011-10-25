@@ -29,7 +29,8 @@
     /* Dupe yytext and invoke parser. */
     #define SAVE_AND_PARSE(token_type) \
         CFCParseHeader(CFCParser_current_parser, token_type, \
-			CFCUtil_strdup(yytext), CFCParser_current_state)
+			CFCParser_dupe(CFCParser_current_state, yytext), \
+			CFCParser_current_state)
 %}
 
 CLASS_NAME_COMPONENT    [A-Z]+[A-Z0-9]*[a-z]+[A-Za-z0-9]*

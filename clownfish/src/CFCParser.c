@@ -23,6 +23,7 @@
 #include "CFCParcel.h"
 #include "CFCFile.h"
 #include "CFCUtil.h"
+#include "CFCMemPool.h"
 #include "CFCLexHeader.h"
 #include "CFCParseHeader.h"
 
@@ -50,6 +51,7 @@ struct CFCParser {
     char *class_name;
     char *class_cnick;
     char *source_class;
+    CFCMemPool *pool;
 };
 
 CFCParser*
@@ -70,6 +72,7 @@ CFCParser_init(CFCParser *self) {
     self->class_name   = NULL;
     self->class_cnick  = NULL;
     self->source_class = NULL;
+    self->pool         = NULL;
     return self;
 }
 
@@ -78,6 +81,7 @@ CFCParser_destroy(CFCParser *self) {
     CFCParseHeaderFree(self->header_parser, free);
     FREEMEM(self->class_name);
     FREEMEM(self->class_cnick);
+    CFCBase_decref((CFCBase*)self->pool);
     CFCBase_decref(self->result);
     CFCBase_destroy((CFCBase*)self);
 }
@@ -88,6 +92,8 @@ CFCParcel *CFCParser_current_parcel = NULL;
 
 CFCBase*
 CFCParser_parse(CFCParser *self, const char *string) {
+    self->pool = CFCMemPool_new(0);
+
     // Make Lemon-based parser and parser state available from Flex-based scanner.
     CFCParser_current_state  = self;
     CFCParser_current_parser = self->header_parser;
@@ -100,6 +106,8 @@ CFCParser_parse(CFCParser *self, const char *string) {
 
     // Finish up.
     CFCParseHeader(CFCParser_current_parser, 0, NULL, self);
+    CFCBase_decref((CFCBase*)self->pool);
+    self->pool = NULL;
     CFCBase *result = self->result;
     self->result = NULL;
     if (self->errors) {
@@ -119,6 +127,19 @@ CFCParser_parse_file(CFCParser *self, const char *string,
     FREEMEM(self->source_class);
     self->source_class = NULL;
     return result;
+}
+
+char*
+CFCParser_dupe(CFCParser *self, const char *string) {
+    size_t len = strlen(string);
+    char *dupe = CFCMemPool_allocate(self->pool, len + 1);
+    memcpy(dupe, string, len + 1);
+    return dupe;
+}
+
+void*
+CFCParser_allocate(CFCParser *self, size_t size) {
+    return CFCMemPool_allocate(self->pool, size);
 }
 
 void

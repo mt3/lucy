@@ -45,6 +45,12 @@ struct CFCFile*
 CFCParser_parse_file(CFCParser *self, const char *string,
                      const char *source_class);
 
+char*
+CFCParser_dupe(CFCParser *self, const char *string);
+
+void*
+CFCParser_allocate(CFCParser *self, size_t size);
+
 void
 CFCParser_set_result(CFCParser *self, struct CFCBase *result);
 
