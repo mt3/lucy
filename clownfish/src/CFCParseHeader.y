@@ -63,9 +63,15 @@ S_new_var(CFCParser *state, char *exposure, char *modifiers, CFCType *type,
         }
         inert = true;
     }
+
+    const char *class_name = NULL;
+    const char *class_cnick = NULL;
+    if (exposure && strcmp(exposure, "local") != 0) {
+        class_name  = CFCParser_get_class_name(state);
+        class_cnick = CFCParser_get_class_cnick(state);
+    }
     CFCVariable *var = CFCVariable_new(CFCParser_get_parcel(), exposure, 
-                                       CFCParser_get_class_name(state),
-                                       CFCParser_get_class_cnick(state),
+                                       class_name, class_cnick,
                                        name, type, inert);
 
     /* Consume tokens. */
