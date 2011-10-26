@@ -21,13 +21,9 @@
     void
     CFCParseHeader(void *header_parser, int token_type, char *value,
                    CFCParser *state);
-    /* Invoke Lemon-generated parser. */
-    #define PARSE(token_type) \
-        CFCParseHeader(CFCParser_current_parser, token_type, NULL, \
-            CFCParser_current_state)
 
-    /* Dupe yytext and invoke parser. */
-    #define SAVE_AND_PARSE(token_type) \
+    /* Dupe yytext and invoke Lemon-generated parser. */
+    #define PARSE(token_type) \
         CFCParseHeader(CFCParser_current_parser, token_type, \
 			CFCParser_dupe(CFCParser_current_state, yytext), \
 			CFCParser_current_state)
@@ -92,19 +88,19 @@ final      { PARSE(CFC_TOKENTYPE_FINAL); }
 :          { PARSE(CFC_TOKENTYPE_COLON); }
 =          { PARSE(CFC_TOKENTYPE_EQUALS); }
 
--?0x[0-9A-Fa-f]+       { SAVE_AND_PARSE(CFC_TOKENTYPE_HEX_LITERAL); }
--?[0-9]+               { SAVE_AND_PARSE(CFC_TOKENTYPE_INTEGER_LITERAL); }
--?[ ]*[0-9+].[0-9]+    { SAVE_AND_PARSE(CFC_TOKENTYPE_FLOAT_LITERAL); }
-\"([^\"\\]|\\.)*\"     { SAVE_AND_PARSE(CFC_TOKENTYPE_STRING_LITERAL); }
+-?0x[0-9A-Fa-f]+       { PARSE(CFC_TOKENTYPE_HEX_LITERAL); }
+-?[0-9]+               { PARSE(CFC_TOKENTYPE_INTEGER_LITERAL); }
+-?[ ]*[0-9+].[0-9]+    { PARSE(CFC_TOKENTYPE_FLOAT_LITERAL); }
+\"([^\"\\]|\\.)*\"     { PARSE(CFC_TOKENTYPE_STRING_LITERAL); }
 
-[a-zA-Z_][a-zA-Z0-9_]* { SAVE_AND_PARSE(CFC_TOKENTYPE_IDENTIFIER); }
+[a-zA-Z_][a-zA-Z0-9_]* { PARSE(CFC_TOKENTYPE_IDENTIFIER); }
 
 __C__[[:space:]]*    { BEGIN(CBLOCK);  PARSE(CFC_TOKENTYPE_CBLOCK_START); }
 <CBLOCK>__END_C__    { BEGIN(INITIAL); PARSE(CFC_TOKENTYPE_CBLOCK_CLOSE); }
-<CBLOCK>(__END_C_[^_]|[^_])+   { SAVE_AND_PARSE(CFC_TOKENTYPE_BLOB); }
+<CBLOCK>(__END_C_[^_]|[^_])+   { PARSE(CFC_TOKENTYPE_BLOB); }
            
     /* Parse docucomments, but skip ordinary comments */
-"/**"([^*]|"*"[^/])*"*/" { SAVE_AND_PARSE(CFC_TOKENTYPE_DOCUCOMMENT); }
+"/**"([^*]|"*"[^/])*"*/" { PARSE(CFC_TOKENTYPE_DOCUCOMMENT); }
 "/*"([^*]|"*"[^/])*"*/"
 
 [ \t\r\n]  /* Skip whitespace. */

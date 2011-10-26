@@ -235,10 +235,6 @@ S_new_type(CFCParser *state, int flags, char *type_name,
 %type param_list_elems                  {CFCParamList*}
 %type docucomment                       {CFCDocuComment*}
 %type cblock                            {CFCCBlock*}
-%type void_type_specifier               {const char*}
-%type va_list_specifier                 {const char*}
-%type float_type_specifier              {const char*}
-%type integer_type_specifier            {const char*}
 %type type_qualifier                    {int}
 %type type_qualifier_list               {int}
 
@@ -257,12 +253,6 @@ S_new_type(CFCParser *state, int flags, char *type_name,
 %destructor param_list_elems                  { CFCBase_decref((CFCBase*)$$); }
 %destructor docucomment                       { CFCBase_decref((CFCBase*)$$); }
 %destructor cblock                            { CFCBase_decref((CFCBase*)$$); }
-%destructor void_type_specifier               { }
-%destructor va_list_specifier                 { }
-%destructor float_type_specifier              { }
-%destructor integer_type_specifier            { }
-%destructor type_qualifier                    { }
-%destructor type_qualifier_list               { }
 
 result ::= type(A).
 {
@@ -531,35 +521,35 @@ type(A) ::= type_qualifier_list(B) type_name(C) array_postfix(E).
     A = S_new_type(state, B, C, NULL, E);
 }
 
-void_type_specifier(A)    ::= VOID.      { A = KW_VOID; }
-va_list_specifier(A)      ::= VA_LIST.   { A = KW_VA_LIST; }
-integer_type_specifier(A) ::= INT8_T.    { A = KW_INT8_T; }
-integer_type_specifier(A) ::= INT16_T.   { A = KW_INT16_T; }
-integer_type_specifier(A) ::= INT32_T.   { A = KW_INT32_T; }
-integer_type_specifier(A) ::= INT64_T.   { A = KW_INT64_T; }
-integer_type_specifier(A) ::= UINT8_T.   { A = KW_UINT8_T; }
-integer_type_specifier(A) ::= UINT16_T.  { A = KW_UINT16_T; }
-integer_type_specifier(A) ::= UINT32_T.  { A = KW_UINT32_T; }
-integer_type_specifier(A) ::= UINT64_T.  { A = KW_UINT64_T; }
-integer_type_specifier(A) ::= CHAR.      { A = KW_CHAR; }
-integer_type_specifier(A) ::= SHORT.     { A = KW_SHORT; }
-integer_type_specifier(A) ::= INT.       { A = KW_INT; }
-integer_type_specifier(A) ::= LONG.      { A = KW_LONG; }
-integer_type_specifier(A) ::= SIZE_T.    { A = KW_SIZE_T; }
-integer_type_specifier(A) ::= BOOL_T.    { A = KW_BOOL_T; }
-float_type_specifier(A) ::= FLOAT.   { A = KW_FLOAT; }
-float_type_specifier(A) ::= DOUBLE.  { A = KW_DOUBLE; }
+void_type_specifier(A)    ::= VOID(B).      { A = B; }
+va_list_specifier(A)      ::= VA_LIST(B).   { A = B; }
+integer_type_specifier(A) ::= INT8_T(B).    { A = B; }
+integer_type_specifier(A) ::= INT16_T(B).   { A = B; }
+integer_type_specifier(A) ::= INT32_T(B).   { A = B; }
+integer_type_specifier(A) ::= INT64_T(B).   { A = B; }
+integer_type_specifier(A) ::= UINT8_T(B).   { A = B; }
+integer_type_specifier(A) ::= UINT16_T(B).  { A = B; }
+integer_type_specifier(A) ::= UINT32_T(B).  { A = B; }
+integer_type_specifier(A) ::= UINT64_T(B).  { A = B; }
+integer_type_specifier(A) ::= CHAR(B).      { A = B; }
+integer_type_specifier(A) ::= SHORT(B).     { A = B; }
+integer_type_specifier(A) ::= INT(B).       { A = B; }
+integer_type_specifier(A) ::= LONG(B).      { A = B; }
+integer_type_specifier(A) ::= SIZE_T(B).    { A = B; }
+integer_type_specifier(A) ::= BOOL_T(B).    { A = B; }
+float_type_specifier(A)   ::= FLOAT(B).     { A = B; }
+float_type_specifier(A)   ::= DOUBLE(B).    { A = B; }
 
-type_name(A) ::= void_type_specifier(B).     { A = CFCParser_dupe(state, B); }
-type_name(A) ::= va_list_specifier(B).       { A = CFCParser_dupe(state, B); }
-type_name(A) ::= integer_type_specifier(B).  { A = CFCParser_dupe(state, B); }
-type_name(A) ::= float_type_specifier(B).    { A = CFCParser_dupe(state, B); }
+type_name(A) ::= void_type_specifier(B).     { A = B; }
+type_name(A) ::= va_list_specifier(B).       { A = B; }
+type_name(A) ::= integer_type_specifier(B).  { A = B; }
+type_name(A) ::= float_type_specifier(B).    { A = B; }
 type_name(A) ::= identifier(B).              { A = B; }
 
-exposure_specifier(A) ::= PUBLIC.  { A = CFCParser_dupe(state, "public"); }
-exposure_specifier(A) ::= PRIVATE. { A = CFCParser_dupe(state, "private"); }
-exposure_specifier(A) ::= PARCEL.  { A = CFCParser_dupe(state, "parcel"); }
-exposure_specifier(A) ::= LOCAL.   { A = CFCParser_dupe(state, "local"); }
+exposure_specifier(A) ::= PUBLIC(B).  { A = B; }
+exposure_specifier(A) ::= PRIVATE(B). { A = B; }
+exposure_specifier(A) ::= PARCEL(B).  { A = B; }
+exposure_specifier(A) ::= LOCAL(B).   { A = B; }
 
 type_qualifier(A) ::= CONST.       { A = CFCTYPE_CONST; }
 type_qualifier(A) ::= NULLABLE.    { A = CFCTYPE_NULLABLE; }
@@ -576,15 +566,12 @@ type_qualifier_list(A) ::= type_qualifier_list(B) type_qualifier(C).
     A |= C;
 }
 
-declaration_modifier(A) ::= INERT.      { A = CFCParser_dupe(state, "inert"); }
-declaration_modifier(A) ::= INLINE.     { A = CFCParser_dupe(state, "inline"); }
-declaration_modifier(A) ::= ABSTRACT.   { A = CFCParser_dupe(state, "abstract"); }
-declaration_modifier(A) ::= FINAL.      { A = CFCParser_dupe(state, "final"); }
+declaration_modifier(A) ::= INERT(B).      { A = B; }
+declaration_modifier(A) ::= INLINE(B).     { A = B; }
+declaration_modifier(A) ::= ABSTRACT(B).   { A = B; }
+declaration_modifier(A) ::= FINAL(B).      { A = B; }
 
-declaration_modifier_list(A) ::= declaration_modifier(B).
-{
-    A = B;
-}
+declaration_modifier_list(A) ::= declaration_modifier(B). { A = B; }
 declaration_modifier_list(A) ::= declaration_modifier_list(B) declaration_modifier(C).
 {
     size_t size = strlen(B) + strlen(C) + 2;
@@ -592,10 +579,7 @@ declaration_modifier_list(A) ::= declaration_modifier_list(B) declaration_modifi
     sprintf(A, "%s %s", B, C);
 }
 
-asterisk_postfix(A) ::= ASTERISK.
-{
-    A = CFCParser_dupe(state, "*");
-}
+asterisk_postfix(A) ::= ASTERISK(B). { A = B; }
 asterisk_postfix(A) ::= asterisk_postfix(B) ASTERISK.
 {
     size_t size = strlen(B) + 2;
@@ -614,10 +598,7 @@ array_postfix_elem(A) ::= LEFT_SQUARE_BRACKET integer_literal(B) RIGHT_SQUARE_BR
     sprintf(A, "[%s]", B);
 }
 
-array_postfix(A) ::= array_postfix_elem(B). 
-{ 
-    A = B; 
-}
+array_postfix(A) ::= array_postfix_elem(B). { A = B; }
 array_postfix(A) ::= array_postfix(B) array_postfix_elem(C).
 {
     size_t size = strlen(B) + strlen(C) + 1;
@@ -629,9 +610,9 @@ scalar_constant(A) ::= hex_literal(B).     { A = B; }
 scalar_constant(A) ::= float_literal(B).   { A = B; }
 scalar_constant(A) ::= integer_literal(B). { A = B; }
 scalar_constant(A) ::= string_literal(B).  { A = B; }
-scalar_constant(A) ::= TRUE.     { A = CFCParser_dupe(state, "true"); }
-scalar_constant(A) ::= FALSE.    { A = CFCParser_dupe(state, "false"); }
-scalar_constant(A) ::= NULL.     { A = CFCParser_dupe(state, "NULL"); }
+scalar_constant(A) ::= TRUE(B).            { A = B; }
+scalar_constant(A) ::= FALSE(B).           { A = B; }
+scalar_constant(A) ::= NULL(B).            { A = B; }
 
 hex_literal(A)     ::= HEX_LITERAL(B).     { A = B; }
 float_literal(A)   ::= FLOAT_LITERAL(B).   { A = B; }
