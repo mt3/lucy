@@ -366,7 +366,7 @@ class_head(A) ::=                exposure_specifier(C)                          
 class_head(A) ::= docucomment(B)                                                    CLASS qualified_id(E)                              .  { A = S_start_class(state, B,    NULL, NULL, E,    NULL, NULL ); }
 class_head(A) ::=                                                                   CLASS qualified_id(E)                              .  { A = S_start_class(state, NULL, NULL, NULL, E,    NULL, NULL ); }
 
-class_head(A) ::= class_head(B) COLON identifier(C).
+class_head(A) ::= class_head(B) COLON IDENTIFIER(C).
 {
     A = B;
     CFCClass_add_attribute(A, C, "1");
@@ -525,7 +525,7 @@ type_name(A) ::= void_type_specifier(B).     { A = B; }
 type_name(A) ::= va_list_specifier(B).       { A = B; }
 type_name(A) ::= integer_type_specifier(B).  { A = B; }
 type_name(A) ::= float_type_specifier(B).    { A = B; }
-type_name(A) ::= identifier(B).              { A = B; }
+type_name(A) ::= IDENTIFIER(B).              { A = B; }
 
 exposure_specifier(A) ::= PUBLIC(B).  { A = B; }
 exposure_specifier(A) ::= PRIVATE(B). { A = B; }
@@ -572,7 +572,7 @@ array_postfix_elem(A) ::= LEFT_SQUARE_BRACKET RIGHT_SQUARE_BRACKET.
 {
     A = CFCParser_dupe(state, "[]");
 }
-array_postfix_elem(A) ::= LEFT_SQUARE_BRACKET integer_literal(B) RIGHT_SQUARE_BRACKET.
+array_postfix_elem(A) ::= LEFT_SQUARE_BRACKET INTEGER_LITERAL(B) RIGHT_SQUARE_BRACKET.
 {
     size_t size = strlen(B) + 3;
     A = (char*)CFCParser_allocate(state, size);
@@ -587,20 +587,15 @@ array_postfix(A) ::= array_postfix(B) array_postfix_elem(C).
     sprintf(A, "%s%s", B, C);
 }
 
-scalar_constant(A) ::= hex_literal(B).     { A = B; }
-scalar_constant(A) ::= float_literal(B).   { A = B; }
-scalar_constant(A) ::= integer_literal(B). { A = B; }
-scalar_constant(A) ::= string_literal(B).  { A = B; }
+scalar_constant(A) ::= HEX_LITERAL(B).     { A = B; }
+scalar_constant(A) ::= FLOAT_LITERAL(B).   { A = B; }
+scalar_constant(A) ::= INTEGER_LITERAL(B). { A = B; }
+scalar_constant(A) ::= STRING_LITERAL(B).  { A = B; }
 scalar_constant(A) ::= TRUE(B).            { A = B; }
 scalar_constant(A) ::= FALSE(B).           { A = B; }
 scalar_constant(A) ::= NULL(B).            { A = B; }
 
-hex_literal(A)     ::= HEX_LITERAL(B).     { A = B; }
-float_literal(A)   ::= FLOAT_LITERAL(B).   { A = B; }
-integer_literal(A) ::= INTEGER_LITERAL(B). { A = B; }
-string_literal(A)  ::= STRING_LITERAL(B).  { A = B; }
-
-declarator(A) ::= identifier(B).
+declarator(A) ::= IDENTIFIER(B).
 {
     A = B;
 }
@@ -653,17 +648,12 @@ docucomment(A) ::= DOCUCOMMENT(B).
     A = CFCDocuComment_parse(B);
 }
 
-identifier(A) ::= IDENTIFIER(B).
+qualified_id(A) ::= IDENTIFIER(B).
 {
     A = B;
 }
 
-qualified_id(A) ::= identifier(B).
-{
-    A = B;
-}
-
-qualified_id(A) ::= qualified_id(B) SCOPE_OP identifier(C).
+qualified_id(A) ::= qualified_id(B) SCOPE_OP IDENTIFIER(C).
 {
     size_t size = strlen(B) + strlen(C) + 3;
     A = (char*)CFCParser_allocate(state, size);
@@ -675,7 +665,7 @@ class_inheritance(A) ::= INHERITS qualified_id(B).
     A = B;
 }
 
-cnick(A) ::= CNICK identifier(B).
+cnick(A) ::= CNICK IDENTIFIER(B).
 {
     A = B;
 }
