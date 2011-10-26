@@ -624,16 +624,7 @@ param_list_elems(A) ::= param_variable(B) EQUALS scalar_constant(C).
     CFCBase_decref((CFCBase*)B);
 }
 
-docucomment(A) ::= DOCUCOMMENT(B).
-{
-    A = CFCDocuComment_parse(B);
-}
-
-qualified_id(A) ::= IDENTIFIER(B).
-{
-    A = B;
-}
-
+qualified_id(A) ::= IDENTIFIER(B). { A = B; }
 qualified_id(A) ::= qualified_id(B) SCOPE_OP IDENTIFIER(C).
 {
     size_t size = strlen(B) + strlen(C) + 3;
@@ -641,22 +632,10 @@ qualified_id(A) ::= qualified_id(B) SCOPE_OP IDENTIFIER(C).
     sprintf(A, "%s::%s", B, C);
 }
 
-class_inheritance(A) ::= INHERITS qualified_id(B).
-{
-    A = B;
-}
+docucomment(A)       ::= DOCUCOMMENT(B).                     { A = CFCDocuComment_parse(B); }
+class_inheritance(A) ::= INHERITS qualified_id(B).           { A = B; }
+cnick(A)             ::= CNICK IDENTIFIER(B).                { A = B; }
+cblock(A)            ::= CBLOCK_START blob(B) CBLOCK_CLOSE.  { A = CFCCBlock_new(B); }
 
-cnick(A) ::= CNICK IDENTIFIER(B).
-{
-    A = B;
-}
+blob(A) ::= BLOB(B). { A = B; }
 
-cblock(A) ::= CBLOCK_START blob(B) CBLOCK_CLOSE.
-{
-    A = CFCCBlock_new(B);
-}
-
-blob(A) ::= BLOB(B).
-{
-    A = B;
-}
