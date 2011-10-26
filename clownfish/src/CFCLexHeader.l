@@ -33,8 +33,6 @@
 			CFCParser_current_state)
 %}
 
-CLASS_NAME_COMPONENT    [A-Z]+[A-Z0-9]*[a-z]+[A-Za-z0-9]*
-
 %option noyywrap
 %option nodefault
 %option yylineno
