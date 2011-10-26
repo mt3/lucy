@@ -23,24 +23,28 @@
 
 struct CFCMemPool {
     CFCBase base;
-    size_t size;
-    size_t consumed;
-    char *arena;
+    size_t arena_size;
+    size_t remaining;
+    char *current;
+    size_t num_arenas;
+    char **arenas;
 };
 
 CFCMemPool*
-CFCMemPool_new(size_t size) {
+CFCMemPool_new(size_t arena_size) {
     CFCMemPool *self = (CFCMemPool*)CFCBase_allocate(sizeof(CFCMemPool),
                                                      "Clownfish::MemPool");
-    return CFCMemPool_init(self, size);
+    return CFCMemPool_init(self, arena_size);
 }
 
 CFCMemPool*
-CFCMemPool_init(CFCMemPool *self, size_t size) {
-    size = size ? size : 0x100000;
-    self->arena    = MALLOCATE(size);
-    self->size     = size;
-    self->consumed = 0;
+CFCMemPool_init(CFCMemPool *self, size_t arena_size) {
+    arena_size = arena_size ? arena_size : 0x100000;
+    self->current    = NULL;
+    self->arena_size = arena_size;
+    self->remaining  = 0;
+    self->num_arenas = 1;
+    self->arenas     = NULL;
     return self;
 }
 
@@ -48,17 +52,28 @@ void*
 CFCMemPool_allocate(CFCMemPool *self, size_t size) {
     size_t overage = (8 - (size % 8)) % 8;
     size_t amount = size + overage;
-    if (self->consumed + amount > self->size) {
-        CFCUtil_die("Exceeded max size of memory pool");
+    size_t arena_size = self->arena_size > amount
+                        ? self->arena_size : amount;
+    if (amount > self->remaining) {
+        self->num_arenas += 1;
+        self->arenas = (char**)REALLOCATE(self->arenas,
+                                          self->num_arenas * sizeof(char*));
+        self->current = (char*)MALLOCATE(arena_size);
+        self->arenas[self->num_arenas - 1] = self->current;
+        self->remaining = amount;
     }
-    void *result = self->arena + self->consumed;
-    self->consumed += amount;
+    size_t offset = arena_size - self->remaining;
+    void *result = self->current + offset;
+    self->remaining -= amount;
     return result;
 }
 
 void
 CFCMemPool_destroy(CFCMemPool *self) {
-    FREEMEM(self->arena);
+    for (size_t i = 0; i < self->num_arenas; i++) {
+        FREEMEM(self->arenas[i]);
+    }
+    FREEMEM(self->arenas);
     CFCBase_destroy((CFCBase*)self);
 }
 
