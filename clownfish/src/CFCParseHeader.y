@@ -32,25 +32,6 @@
   #define false 0
 #endif
 
-static const char KW_INT8_T[]   = "int8_t";
-static const char KW_INT16_T[]  = "int16_t";
-static const char KW_INT32_T[]  = "int32_t";
-static const char KW_INT64_T[]  = "int64_t";
-static const char KW_UINT8_T[]  = "uint8_t";
-static const char KW_UINT16_T[] = "uint16_t";
-static const char KW_UINT32_T[] = "uint32_t";
-static const char KW_UINT64_T[] = "uint64_t";
-static const char KW_CHAR[]     = "char";
-static const char KW_SHORT[]    = "short";
-static const char KW_INT[]      = "int";
-static const char KW_LONG[]     = "long";
-static const char KW_SIZE_T[]   = "size_t";
-static const char KW_BOOL_T[]   = "bool_t";
-static const char KW_FLOAT[]    = "float";
-static const char KW_DOUBLE[]   = "double";
-static const char KW_VOID[]     = "void";
-static const char KW_VA_LIST[]  = "va_list";
-
 static CFCClass*
 S_start_class(CFCParser *state, CFCDocuComment *docucomment, char *exposure,
               char *declaration_modifier_list, char *class_name,
@@ -151,32 +132,32 @@ S_new_type(CFCParser *state, int flags, char *type_name,
         flags &= ~CFCTYPE_NULLABLE;
     }
 
-    if (!strcmp(type_name, KW_INT8_T)
-        || !strcmp(type_name, KW_INT16_T)
-        || !strcmp(type_name, KW_INT32_T)
-        || !strcmp(type_name, KW_INT64_T)
-        || !strcmp(type_name, KW_UINT8_T)
-        || !strcmp(type_name, KW_UINT16_T)
-        || !strcmp(type_name, KW_UINT32_T)
-        || !strcmp(type_name, KW_UINT64_T)
-        || !strcmp(type_name, KW_CHAR)
-        || !strcmp(type_name, KW_SHORT)
-        || !strcmp(type_name, KW_INT)
-        || !strcmp(type_name, KW_LONG)
-        || !strcmp(type_name, KW_SIZE_T)
-        || !strcmp(type_name, KW_BOOL_T)
+    if (!strcmp(type_name, "int8_t")
+        || !strcmp(type_name, "int16_t")
+        || !strcmp(type_name, "int32_t")
+        || !strcmp(type_name, "int64_t")
+        || !strcmp(type_name, "uint8_t")
+        || !strcmp(type_name, "uint16_t")
+        || !strcmp(type_name, "uint32_t")
+        || !strcmp(type_name, "uint64_t")
+        || !strcmp(type_name, "char")
+        || !strcmp(type_name, "short")
+        || !strcmp(type_name, "int")
+        || !strcmp(type_name, "long")
+        || !strcmp(type_name, "size_t")
+        || !strcmp(type_name, "bool_t")
        ) {
         type = CFCType_new_integer(flags, type_name);
     }
-    else if (!strcmp(type_name, KW_FLOAT)
-             || !strcmp(type_name, KW_DOUBLE)
+    else if (!strcmp(type_name, "float")
+             || !strcmp(type_name, "double")
             ) {
         type = CFCType_new_float(flags, type_name);
     }
-    else if (!strcmp(type_name, KW_VOID)) {
+    else if (!strcmp(type_name, "void")) {
         type = CFCType_new_void(!!(flags & CFCTYPE_CONST));
     }
-    else if (!strcmp(type_name, KW_VA_LIST)) {
+    else if (!strcmp(type_name, "va_list")) {
         type = CFCType_new_va_list();
     }
     else if (type_name_len > 2
