@@ -726,7 +726,7 @@ _new(klass, source, dest, parser)
     const char *klass;
     const char *source;
     const char *dest;
-    SV *parser;
+    CFCParser *parser;
 CODE:
     CFCHierarchy *self = CFCHierarchy_new(source, dest, parser);
     RETVAL = S_cfcbase_to_perlref(self);
