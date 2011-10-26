@@ -642,6 +642,7 @@ docucomment(A)       ::= DOCUCOMMENT(B).                     { A = CFCDocuCommen
 class_inheritance(A) ::= INHERITS qualified_id(B).           { A = B; }
 cnick(A)             ::= CNICK IDENTIFIER(B).                { A = B; }
 cblock(A)            ::= CBLOCK_START blob(B) CBLOCK_CLOSE.  { A = CFCCBlock_new(B); }
+cblock(A)            ::= CBLOCK_START CBLOCK_CLOSE.          { A = CFCCBlock_new(""); }
 
 blob(A) ::= BLOB(B). { A = B; }
 blob(A) ::= blob(B) BLOB(C).
