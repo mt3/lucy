@@ -36,7 +36,7 @@ static CFCClass*
 S_start_class(CFCParser *state, CFCDocuComment *docucomment, char *exposure,
               char *declaration_modifier_list, char *class_name,
               char *class_cnick, char *inheritance) {
-    const char *source_class = NULL; /* FIXME derive from file. */
+    const char *source_class = CFCParser_get_source_class(state);
     int is_final = false;
     int is_inert = false;
     if (declaration_modifier_list) {
