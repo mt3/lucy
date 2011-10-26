@@ -502,30 +502,11 @@ type(A) ::= type_qualifier_list(B) type_name(C) array_postfix(E).
     A = S_new_type(state, B, C, NULL, E);
 }
 
-void_type_specifier(A)    ::= VOID(B).      { A = B; }
-va_list_specifier(A)      ::= VA_LIST(B).   { A = B; }
-integer_type_specifier(A) ::= INT8_T(B).    { A = B; }
-integer_type_specifier(A) ::= INT16_T(B).   { A = B; }
-integer_type_specifier(A) ::= INT32_T(B).   { A = B; }
-integer_type_specifier(A) ::= INT64_T(B).   { A = B; }
-integer_type_specifier(A) ::= UINT8_T(B).   { A = B; }
-integer_type_specifier(A) ::= UINT16_T(B).  { A = B; }
-integer_type_specifier(A) ::= UINT32_T(B).  { A = B; }
-integer_type_specifier(A) ::= UINT64_T(B).  { A = B; }
-integer_type_specifier(A) ::= CHAR(B).      { A = B; }
-integer_type_specifier(A) ::= SHORT(B).     { A = B; }
-integer_type_specifier(A) ::= INT(B).       { A = B; }
-integer_type_specifier(A) ::= LONG(B).      { A = B; }
-integer_type_specifier(A) ::= SIZE_T(B).    { A = B; }
-integer_type_specifier(A) ::= BOOL_T(B).    { A = B; }
-float_type_specifier(A)   ::= FLOAT(B).     { A = B; }
-float_type_specifier(A)   ::= DOUBLE(B).    { A = B; }
-
-type_name(A) ::= void_type_specifier(B).     { A = B; }
-type_name(A) ::= va_list_specifier(B).       { A = B; }
-type_name(A) ::= integer_type_specifier(B).  { A = B; }
-type_name(A) ::= float_type_specifier(B).    { A = B; }
-type_name(A) ::= IDENTIFIER(B).              { A = B; }
+type_name(A) ::= VOID(B).               { A = B; }
+type_name(A) ::= VA_LIST(B).            { A = B; }
+type_name(A) ::= INTEGER_TYPE_NAME(B).  { A = B; }
+type_name(A) ::= FLOAT_TYPE_NAME(B).    { A = B; }
+type_name(A) ::= IDENTIFIER(B).         { A = B; }
 
 exposure_specifier(A) ::= PUBLIC(B).  { A = B; }
 exposure_specifier(A) ::= PRIVATE(B). { A = B; }
