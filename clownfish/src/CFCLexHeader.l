@@ -97,7 +97,9 @@ final      { PARSE(CFC_TOKENTYPE_FINAL); }
 
 __C__[[:space:]]*    { BEGIN(CBLOCK);  PARSE(CFC_TOKENTYPE_CBLOCK_START); }
 <CBLOCK>__END_C__    { BEGIN(INITIAL); PARSE(CFC_TOKENTYPE_CBLOCK_CLOSE); }
-<CBLOCK>(__END_C_[^_]|[^_])+   { PARSE(CFC_TOKENTYPE_BLOB); }
+<CBLOCK>__END_C_[^_]   { PARSE(CFC_TOKENTYPE_BLOB); }
+<CBLOCK>[^_]+          { PARSE(CFC_TOKENTYPE_BLOB); }
+<CBLOCK>_+             { PARSE(CFC_TOKENTYPE_BLOB); }
            
     /* Parse docucomments, but skip ordinary comments */
 "/**"([^*]|"*"[^/])*"*/" { PARSE(CFC_TOKENTYPE_DOCUCOMMENT); }

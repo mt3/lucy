@@ -638,4 +638,10 @@ cnick(A)             ::= CNICK IDENTIFIER(B).                { A = B; }
 cblock(A)            ::= CBLOCK_START blob(B) CBLOCK_CLOSE.  { A = CFCCBlock_new(B); }
 
 blob(A) ::= BLOB(B). { A = B; }
+blob(A) ::= blob(B) BLOB(C).
+{
+    size_t size = strlen(B) + strlen(C) + 1;
+    A = (char*)CFCParser_allocate(state, size);
+    sprintf(A, "%s%s", B, C);
+}
 
