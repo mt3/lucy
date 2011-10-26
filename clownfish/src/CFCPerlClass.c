@@ -109,6 +109,8 @@ S_global_replace(const char *string, const char *match,
 
 char*
 CFCPerlClass_perlify_doc_text(CFCPerlClass *self, const char *source) {
+    (void)self; // unused
+
     // Remove double-equals hack needed to fool perldoc, PAUSE, etc. :P
     // char *copy = S_global_replace(source, "==", "=");
     char *copy = CFCUtil_strdup(source);

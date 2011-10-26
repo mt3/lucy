@@ -138,6 +138,7 @@ S_xsub_body(CFCPerlMethod *self) {
 static char*
 S_self_assign_statement(CFCPerlMethod *self, CFCType *type,
                         const char *method_name) {
+    (void)self; // unused
     const char *type_c = CFCType_to_c(type);
     if (!CFCType_is_object(type)) {
         CFCUtil_die("Not an object type: %s", type_c);
@@ -165,7 +166,6 @@ static char*
 S_xsub_def_labeled_params(CFCPerlMethod *self) {
     const char *c_name = self->sub.c_name;
     CFCParamList *param_list = self->sub.param_list;
-    const char **arg_inits   = CFCParamList_get_initial_values(param_list);
     CFCVariable **arg_vars   = CFCParamList_get_variables(param_list);
     CFCVariable *self_var    = arg_vars[0];
     CFCType     *self_type   = CFCVariable_get_type(self_var);

@@ -124,6 +124,7 @@ S_new_sub(CFCParser *state, CFCDocuComment *docucomment,
 static CFCType*
 S_new_type(CFCParser *state, int flags, char *type_name,
            char *asterisk_postfix, char *array_postfix) {
+    (void)state; /* unused */
     CFCType *type = NULL;
     size_t type_name_len = strlen(type_name);
     int indirection = asterisk_postfix ? strlen(asterisk_postfix) : 0;

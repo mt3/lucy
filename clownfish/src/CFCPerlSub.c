@@ -203,6 +203,7 @@ S_allot_params_arg(CFCType *type, const char *label, int required) {
     }
 
     CFCUtil_die("Missing typemap for %s", type_c_string);
+    return NULL; // unreachable
 }
 
 char*
