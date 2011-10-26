@@ -19,10 +19,14 @@ use warnings;
 package Clownfish::Build;
 use base qw( Module::Build );
 
-use File::Spec::Functions qw( catfile );
+use File::Spec::Functions qw( catfile updir catdir );
+use Config;
+use Cwd qw( getcwd );
 
-my $PPPORT_H_PATH = catfile(qw( include ppport.h ));
-my $LEMON_EXE_PATH = 'lemon';    # Don't bother compiling lemon for now.
+my $base_dir       = updir();
+my $PPPORT_H_PATH  = catfile(qw( include ppport.h ));
+my $LEMON_DIR      = catdir( $base_dir, 'lemon' );
+my $LEMON_EXE_PATH = catfile( $LEMON_DIR, "lemon$Config{_exe}" );
 my $CFC_SOURCE_DIR = 'src';
 
 sub extra_ccflags {
@@ -80,6 +84,24 @@ sub new {
     );
 }
 
+sub _run_make {
+    my ( $self, %params ) = @_;
+    my @command           = @{ $params{args} };
+    my $dir               = $params{dir};
+    my $current_directory = getcwd();
+    chdir $dir if $dir;
+    unshift @command, 'CC=' . $self->config('cc');
+    if ( $self->config('cc') =~ /^cl\b/ ) {
+        unshift @command, "-f", "Makefile.MSVC";
+    }
+    elsif ( $^O =~ /mswin/i ) {
+        unshift @command, "-f", "Makefile.MinGW";
+    }
+    unshift @command, "$Config{make}";
+    system(@command) and confess("$Config{make} failed");
+    chdir $current_directory if $dir;
+}
+
 # Write ppport.h, which supplies some XS routines not found in older Perls and
 # allows us to use more up-to-date XS API while still supporting Perls back to
 # 5.8.3.
@@ -96,9 +118,20 @@ sub ACTION_ppport {
     }
 }
 
+# Build the Lemon parser generator.
+sub ACTION_lemon {
+    my $self = shift;
+    print "Building the Lemon parser generator...\n\n";
+    $self->_run_make(
+        dir  => $LEMON_DIR,
+        args => [], 
+    );  
+}
+
 # Run all .y files through lemon.
 sub ACTION_parsers {
     my $self = shift;
+    $self->dispatch('lemon');
     my $y_files = $self->rscan_dir( $CFC_SOURCE_DIR, qr/\.y$/ );
     for my $y_file (@$y_files) {
         my $c_file = $y_file;
