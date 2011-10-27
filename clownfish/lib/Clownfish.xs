@@ -2048,7 +2048,7 @@ PPCODE:
 MODULE = Clownfish    PACKAGE = Clownfish::Parser
 
 SV*
-_new(klass)
+new(klass)
     const char *klass;
 CODE:
     CFCParser *self = CFCParser_new();
@@ -2057,7 +2057,7 @@ CODE:
 OUTPUT: RETVAL
 
 void
-_destroy(self)
+DESTROY(self)
     CFCParser *self;
 PPCODE:
     CFCParser_destroy(self);

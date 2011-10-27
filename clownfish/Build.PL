@@ -25,7 +25,6 @@ my $builder = Clownfish::Build->new(
     dist_author =>
         'The Apache Lucy Project <lucy-dev at incubator dot apache dot org>',
     dist_version_from => 'lib/Clownfish.pm',
-    requires          => { 'Parse::RecDescent' => 0, },
     build_requires    => {
         'ExtUtils::CBuilder' => 0.18,
         'ExtUtils::ParseXS'  => 2.16,
