@@ -89,8 +89,8 @@ final      { PARSE(CFC_TOKENTYPE_FINAL); }
 =          { PARSE(CFC_TOKENTYPE_EQUALS); }
 
 -?0x[0-9A-Fa-f]+       { PARSE(CFC_TOKENTYPE_HEX_LITERAL); }
+-?[0-9]+\.[0-9]+       { PARSE(CFC_TOKENTYPE_FLOAT_LITERAL); }
 -?[0-9]+               { PARSE(CFC_TOKENTYPE_INTEGER_LITERAL); }
--?[ ]*[0-9+].[0-9]+    { PARSE(CFC_TOKENTYPE_FLOAT_LITERAL); }
 \"([^\"\\]|\\.)*\"     { PARSE(CFC_TOKENTYPE_STRING_LITERAL); }
 
 [a-zA-Z_][a-zA-Z0-9_]* { PARSE(CFC_TOKENTYPE_IDENTIFIER); }
