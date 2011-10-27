@@ -25,18 +25,18 @@ my $parser = Clownfish::Parser->new;
 my $thing = Clownfish::Variable->new(
     parcel     => 'Neato',
     class_name => 'Foo',
-    type       => $parser->type('Thing*'),
+    type       => $parser->parse('Thing*'),
     micro_sym  => 'thing',
 );
 my $widget = Clownfish::Variable->new(
     class_name => 'Widget',
-    type       => $parser->type('Widget*'),
+    type       => $parser->parse('Widget*'),
     micro_sym  => 'widget',
 );
 my $tread_water = Clownfish::Function->new(
     parcel      => 'Neato',
     class_name  => 'Foo',
-    return_type => $parser->type('void'),
+    return_type => $parser->parse('void'),
     micro_sym   => 'tread_water',
     param_list  => $parser->parse('()'),
 );
@@ -138,11 +138,12 @@ like( $foo_jr->get_autocode, qr/load/i, "autogenerate Dump/Load" );
 is_deeply( $foo->tree_to_ladder, [ $foo, $foo_jr, $final_foo ],
     'tree_to_ladder' );
 
-ok( $parser->class_modifier($_), "class_modifier: $_" )
-    for (qw( abstract inert ));
+ok( $parser->parse("$_ class Iam$_ { }")->$_, "class_modifier: $_" )
+    for (qw( final inert ));
 
-ok( $parser->class_inheritance($_), "class_inheritance: $_" )
-    for ( 'inherits Foo', 'inherits Foo::FooJr::FooIII' );
+is( $parser->parse("class Fu::$_ inherits $_ { }")->get_parent_class_name,
+    $_, "class_inheritance: $_" )
+    for ( 'Fooble', 'Foo::FooJr::FooIII' );
 
 my $class_content
     = 'public class Foo::Foodie cnick Foodie inherits Foo { private int num; }';

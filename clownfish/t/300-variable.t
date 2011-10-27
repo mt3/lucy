@@ -26,7 +26,7 @@ my $parser = Clownfish::Parser->new;
 $parser->parse('parcel Neato;')
     or die "failed to process parcel_definition";
 
-sub new_type { $parser->type(shift) }
+sub new_type { $parser->parse(shift) }
 
 eval {
     my $death = Clownfish::Variable->new(

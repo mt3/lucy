@@ -27,7 +27,7 @@ $parser->parse('parcel Neato;')
 
 my %args = (
     parcel      => 'Neato',
-    return_type => $parser->type('Obj*'),
+    return_type => $parser->parse('Obj*'),
     class_name  => 'Neato::Foo',
     class_cnick => 'Foo',
     param_list  => $parser->parse('(Foo *self, int32_t count = 0)'),

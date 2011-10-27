@@ -16,7 +16,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 96;
+use Test::More tests => 88;
 
 BEGIN { use_ok('Clownfish::Parser') }
 
@@ -31,59 +31,53 @@ isa_ok( $parser->parse("parcel Crustacean cnick Crust;"),
 # Set and leave parcel.
 my $parcel = $parser->parse('parcel Crustacean cnick Crust;')
     or die "failed to process parcel_definition";
-is( Clownfish::Parser->get_parcel, $parcel,
-    "parcel_definition sets internal \$parcel var" );
+is( Clownfish::Parser->get_parcel,
+    $parcel, "parcel_definition sets internal \$parcel var" );
 
-is( $parser->strip_plain_comments("/*x*/"),
-    "     ", "comments replaced by spaces" );
-is( $parser->strip_plain_comments("/**x*/"),
-    "/**x*/", "docu-comment untouched" );
-is( $parser->strip_plain_comments("/*\n*/"), "  \n  ", "newline preserved" );
-
-for (qw( foo _foo foo_yoo FOO Foo fOO f00 )) {
-    is( $parser->identifier($_), $_, "identifier: $_" );
+for (qw( foo _foo foo_yoo FOO Foo fOO f00 foo_foo_foo )) {
+    my $var = $parser->parse("int32_t $_;");
+    is( $var->micro_sym, $_, "identifier/declarator: $_" );
 }
 
-for (qw( void unsigned float uint32_t int64_t uint8_t bool_t )) {
-    ok( !$parser->identifier($_), "reserved word not an identifier: $_" );
+for (qw( void float uint32_t int64_t uint8_t bool_t )) {
+    my $var = $parser->parse("int32_t $_;");
+    ok( !defined($var), "reserved word not parsed as identifier: $_" );
 }
 
-is( $parser->chy_integer_specifier($_), $_, "Charmony integer specifier $_" )
-    for qw( bool_t );
+isa_ok( $parser->parse("bool_t"),
+    "Clownfish::Type", "Charmony integer specifier bool_t" );
 
-is( $parser->object_type_specifier($_), $_, "object_type_specifier $_" )
+is( $parser->parse("$_*")->get_specifier,
+    "crust_$_", "object_type_specifier $_" )
     for qw( ByteBuf Obj ANDMatcher );
 
-is( $parser->type_qualifier($_), $_, "type_qualifier $_" ) for qw( const );
+ok( $parser->parse("const char")->const, "type_qualifier const" );
 
-is( $parser->exposure_specifier($_), $_, "exposure_specifier $_" )
+ok( $parser->parse("$_ int32_t foo;")->$_, "exposure_specifier $_" )
     for qw( public private parcel );
 
 isa_ok( $parser->parse($_), "Clownfish::Type", "type $_" )
-    for ( 'const char *', 'Obj*', 'i32_t', 'char[]', 'long[1]',
-    'i64_t[30]' );
+    for ( 'const char *', 'Obj*', 'i32_t', 'char[]', 'long[1]', 'i64_t[30]' );
 
-is( $parser->declarator($_), $_, "declarator: $_" )
-    for ( 'foo', 'bar_bar_bar' );
+is( $parser->parse("(int32_t foo = $_)")->get_initial_values->[0],
+    $_, "hex_constant: $_" )
+    for (qw( 0x1 0x0a 0xFFFFFFFF -0xFC ));
 
-is( $parser->hex_constant($_), $_, "hex_constant: $_" )
-    for (qw( 0x1 0x0a 0xFFFFFFFF ));
-
-is( $parser->integer_constant($_), $_, "integer_constant: $_" )
+is( $parser->parse("(int32_t foo = $_)")->get_initial_values->[0],
+    $_, "integer_constant: $_" )
     for (qw( 1 -9999  0 10000 ));
 
-is( $parser->float_constant($_), $_, "float_constant: $_" )
+is( $parser->parse("(double foo = $_)")->get_initial_values->[0],
+    $_, "float_constant: $_" )
     for (qw( 1.0 -9999.999  0.1 0.0 ));
 
-is( $parser->string_literal($_), $_, "string_literal: $_" )
+is( $parser->parse("(CharBuf *foo = $_)")->get_initial_values->[0],
+    $_, "string_literal: $_" )
     for ( q|"blah"|, q|"blah blah"|, q|"\\"blah\\" \\"blah\\""| );
-
-is( $parser->scalar_constant($_), $_, "scalar_constant: $_" )
-    for ( q|"blah"|, 1, 1.2, "0xFC" );
 
 my @composites = ( 'int[]', "i32_t **", "Foo **", "Foo ***", "const void *" );
 for my $composite (@composites) {
-    my $parsed = $parser->type($composite);
+    my $parsed = $parser->parse($composite);
     ok( $parsed && $parsed->is_composite, "composite_type: $composite" );
 }
 
@@ -112,26 +106,41 @@ is_deeply(
 
 my %sub_args = ( class => 'Stuff::Obj', cnick => 'Obj' );
 
-ok( $parser->declaration_statement( $_, 0, %sub_args, inert => 1 ),
-    "declaration_statment: $_" )
+$parser->set_class_name('Stuff::Obj');
+$parser->set_class_cnick('Obj');
+ok( $parser->parse($_), "declaration statement: $_" )
     for (
     'public Foo* Spew_Foo(Obj *self, uint32_t *how_many);',
     'private Hash *hash;',
     );
 
-is( $parser->object_type_specifier($_), $_, "object_type_specifier: $_" )
+is( $parser->parse("$_*")->get_specifier,
+    "crust_$_", "object_type_specifier: $_" )
     for (qw( Foo FooJr FooIII Foo4th ));
 
-ok( !$parser->object_type_specifier($_), "illegal object_type_specifier: $_" )
-    for (qw( foo fooBar Foo_Bar FOOBAR 1Foo 1FOO ));
+SKIP: {
+    skip( "Can't recover from bad specifier under flex/lemon parser", 6 );
+    ok( !$parser->parse("$_*"), "illegal object_type_specifier: $_" )
+        for (qw( foo fooBar Foo_Bar FOOBAR 1Foo 1FOO ));
+}
 
-is( $parser->class_name($_), $_, "class_name: $_" )
+is( $parser->parse("class $_ { }")->get_class_name, $_, "class_name: $_" )
     for (qw( Foo Foo::FooJr Foo::FooJr::FooIII Foo::FooJr::FooIII::Foo4th ));
 
-ok( !$parser->class_name($_), "illegal class_name: $_" )
-    for (qw( foo fooBar Foo_Bar FOOBAR 1Foo 1FOO ));
+SKIP: {
+    skip( "Can't recover from bad class name under flex/lemon parser", 6 );
+    ok( !$parser->parse("class $_ { }"), "illegal class_name: $_" )
+        for (qw( foo fooBar Foo_Bar FOOBAR 1Foo 1FOO ));
+}
 
-is( $parser->cnick(qq|cnick $_|), $_, "cnick: $_" ) for (qw( Foo FF ));
+is( $parser->parse(qq|class Foodie$_ cnick $_ { }|)->get_cnick,
+    $_, "cnick: $_" )
+    for (qw( Foo FF ));
 
-ok( !$parser->cnick(qq|cnick $_|), "Illegal cnick: $_" )
-    for (qw( foo fOO 1Foo ));
+SKIP: {
+    skip( "Can't recover from bad cnick under flex/lemon parser", 3 );
+    is( !$parser->parse(qq|class Foodie$_ cnick $_ { }|),
+        "Illegal cnick: $_" )
+        for (qw( foo fOO 1Foo ));
+}
+

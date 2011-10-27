@@ -16,7 +16,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 61;
+use Test::More tests => 55;
 use Clownfish::Type;
 use Clownfish::Parser;
 
@@ -27,9 +27,6 @@ my $parcel = $parser->parse('parcel Neato;')
     or die "failed to process parcel_definition";
 
 for my $bad_specifier (qw( foo fooBar Foo_Bar FOOBAR 1Foo 1FOO )) {
-    ok( !$parser->object_type_specifier($bad_specifier),
-        "reject bad object_type_specifier $bad_specifier"
-    );
     eval {
         my $type = Clownfish::Type->new_object(
             parcel    => 'Neato',
@@ -41,9 +38,9 @@ for my $bad_specifier (qw( foo fooBar Foo_Bar FOOBAR 1Foo 1FOO )) {
 }
 
 for my $specifier (qw( Foo FooJr FooIII Foo4th )) {
-    is( $parser->object_type_specifier($specifier),
-        $specifier, "object_type_specifier: $specifier" );
-    is( $parser->object_type_specifier("neato_$specifier"),
+    is( $parser->parse("$specifier*")->get_specifier,
+        "neato_$specifier", "object_type_specifier: $specifier" );
+    is( $parser->parse("neato_$specifier*")->get_specifier,
         "neato_$specifier", "object_type_specifier: neato_$specifier" );
     my $type = $parser->parse("$specifier*");
     ok( $type && $type->is_object, "$specifier*" );
