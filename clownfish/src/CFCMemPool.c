@@ -39,11 +39,11 @@ CFCMemPool_new(size_t arena_size) {
 
 CFCMemPool*
 CFCMemPool_init(CFCMemPool *self, size_t arena_size) {
-    arena_size = arena_size ? arena_size : 0x100000;
+    arena_size = arena_size ? arena_size : 0x400; // 1k
     self->current    = NULL;
     self->arena_size = arena_size;
     self->remaining  = 0;
-    self->num_arenas = 1;
+    self->num_arenas = 0;
     self->arenas     = NULL;
     return self;
 }

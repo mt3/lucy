@@ -23,6 +23,7 @@
 #include "CFCFunction.h"
 #include "CFCHierarchy.h"
 #include "CFCMethod.h"
+#include "CFCMemPool.h"
 #include "CFCParamList.h"
 #include "CFCParcel.h"
 #include "CFCParser.h"

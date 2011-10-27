@@ -2112,3 +2112,11 @@ CODE:
 OUTPUT: RETVAL
 
 
+MODULE = Clownfish    PACKAGE = Clownfish::MemPool
+
+void
+DESTROY(self)
+    CFCMemPool *self;
+PPCODE:
+    CFCMemPool_destroy(self);
+
