@@ -22,7 +22,7 @@
 #include "Lucy/Analysis/Token.h"
 #include "Lucy/Analysis/Inversion.h"
 #include "Lucy/Analysis/SnowballStemmer.h"
-#include "Lucy/Analysis/RegexTokenizer.h"
+#include "Lucy/Analysis/StandardTokenizer.h"
 
 PolyAnalyzer*
 PolyAnalyzer_new(const CharBuf *language, VArray *analyzers) {
@@ -43,7 +43,7 @@ PolyAnalyzer_init(PolyAnalyzer *self, const CharBuf *language,
     else if (language) {
         self->analyzers = VA_new(3);
         VA_Push(self->analyzers, (Obj*)CaseFolder_new());
-        VA_Push(self->analyzers, (Obj*)RegexTokenizer_new(NULL));
+        VA_Push(self->analyzers, (Obj*)StandardTokenizer_new());
         VA_Push(self->analyzers, (Obj*)SnowStemmer_new(language));
     }
     else {
