@@ -14,6 +14,7 @@ lib/Lucy/Analysis/PolyAnalyzer.pm
 lib/Lucy/Analysis/RegexTokenizer.pm
 lib/Lucy/Analysis/SnowballStemmer.pm
 lib/Lucy/Analysis/SnowballStopFilter.pm
+lib/Lucy/Analysis/StandardTokenizer.pm
 lib/Lucy/Analysis/Token.pm
 lib/Lucy/Docs/Cookbook.pod
 lib/Lucy/Docs/Cookbook/CustomQuery.pod
