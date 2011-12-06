@@ -20,7 +20,8 @@
 #include "Lucy/Test.h"
 #include "Lucy/Test/Analysis/TestStandardTokenizer.h"
 #include "Lucy/Analysis/StandardTokenizer.h"
-
+#include "Lucy/Store/FSFolder.h"
+#include "Lucy/Util/Json.h"
 
 static void
 test_Dump_Load_and_Equals(TestBatch *batch) {
@@ -40,6 +41,7 @@ test_Dump_Load_and_Equals(TestBatch *batch) {
 static void
 test_tokenizer(TestBatch *batch) {
     StandardTokenizer *tokenizer = StandardTokenizer_new();
+
     ZombieCharBuf *word = ZCB_WRAP_STR(
         " ."
         "tha\xCC\x82t's"
@@ -82,12 +84,40 @@ test_tokenizer(TestBatch *batch) {
               && CB_Equals_Str(token, "a", 1),
               "Token: %s", CB_Get_Ptr8(token));
     DECREF(got);
+
+    CharBuf  *path           = CB_newf("modules");
+    FSFolder *modules_folder = FSFolder_new(path);
+    if (!FSFolder_Check(modules_folder)) {
+        DECREF(modules_folder);
+        CB_setf(path, "../modules");
+        modules_folder = FSFolder_new(path);
+        if (!FSFolder_Check(modules_folder)) {
+            THROW(ERR, "Can't open modules folder");
+        }
+    }
+    CB_setf(path, "unicode/ucd/WordBreakTest.json");
+    VArray *tests = (VArray*)Json_slurp_json((Folder*)modules_folder, path);
+    if (!tests) { RETHROW(Err_get_error()); }
+
+    for (uint32_t i = 0, max = VA_Get_Size(tests); i < max; i++) {
+        Hash *test = (Hash*)VA_Fetch(tests, i);
+        CharBuf *text = (CharBuf*)Hash_Fetch_Str(test, "text", 4);
+        VArray *wanted = (VArray*)Hash_Fetch_Str(test, "words", 5);
+        VArray *got = StandardTokenizer_Split(tokenizer, text);
+        TEST_TRUE(batch, VA_Equals(wanted, (Obj*)got), "UCD test #%d", i + 1);
+        DECREF(got);
+    }
+
+    DECREF(tests);
+    DECREF(modules_folder);
+    DECREF(path);
+
     DECREF(tokenizer);
 }
 
 void
 TestStandardTokenizer_run_tests() {
-    TestBatch *batch = TestBatch_new(6);
+    TestBatch *batch = TestBatch_new(984);
 
     TestBatch_Plan(batch);
 
