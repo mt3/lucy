@@ -16,7 +16,6 @@
 
 #define C_LUCY_STANDARDTOKENIZER
 #define C_LUCY_TOKEN
-#define C_LUCY_I32ARRAY
 #include "Lucy/Util/ToolSet.h"
 
 #include "Lucy/Analysis/StandardTokenizer.h"
