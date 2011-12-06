@@ -50,13 +50,15 @@ can be computed using bit operations.
 =head2 new
 
     my $table = UnicodeTable->new(
-        table => \@table,
-        max   => $max,
-        shift => $shift,
-        index => $index,
+        table   => \@table,
+        default => $default,
+        max     => $max,
+        shift   => $shift,
+        index   => $index,
     );
 
 \@table is an arrayref with the table values, $max is the maximum value.
+The default value for undefined table entries is $default or 0.
 $shift and $index are used for compressed tables.
 
 =cut
@@ -67,10 +69,12 @@ sub new {
     my $opts = @_ == 1 ? $_[0] : {@_};
     my $self = bless( {}, $class );
 
-    for my $name (qw(table max shift index)) {
+    for my $name (qw(table default max shift index)) {
         $self->{$name} = $opts->{$name};
     }
 
+    $self->{default} = 0
+        if !defined( $self->{default} );
     $self->{mask} = ( 1 << $self->{shift} ) - 1
         if defined( $self->{shift} );
 
@@ -83,11 +87,13 @@ sub new {
         filename => $filename,
         type     => $type,
         map      => \%map,
+        default  => $default,
     );
 
 Reads a table from a Unicode data text file. $type is either 'Enumerated'
 or 'Boolean'. \%map is a hashref that maps property values to integers.
-For booleans, these integers are ORed.
+For booleans, these integers are ORed. $default is the default value passed
+to L<new>.
 
 =cut
 
@@ -153,11 +159,10 @@ sub read {
 
     close($file);
 
-    return bless(
-        {   table => \@table,
-            max   => $max,
-        },
-        $class
+    return $class->new(
+        table   => \@table,
+        default => $opts->{default},
+        max     => $max,
     );
 }
 
@@ -203,6 +208,7 @@ Set entry at index $i to $value. Don't use with compressed tables.
 sub set {
     my ( $self, $i, $value ) = @_;
     $self->{table}[$i] = $value;
+    $self->{max} = $value if $value > $self->{max};
 }
 
 =head2 size
@@ -237,11 +243,13 @@ sub lookup {
 
     if ($index) {
         $i = $index->mangle_index($i);
-        return 0 if !defined($i);
+        return $self->{default} if !defined($i);
         return $self->{table}->[$i];
     }
     else {
-        return $self->{table}->[$i] || 0;
+        my $val = $self->{table}->[$i];
+        return $self->{default} if !defined($val);
+        return $val;
     }
 }
 
@@ -285,41 +293,61 @@ sub compress {
     my ( $self, $shift ) = @_;
 
     my $table       = $self->{table};
+    my $default     = $self->{default};
     my $block_size  = 1 << $shift;
     my $block_count = 0;
-    my ( @compressed, @index, %blocks );
+    my ( @compressed, @index, %block_nums );
 
     for ( my $start = 0; $start < @$table; $start += $block_size ) {
         my @block;
 
         for ( my $i = $start; $i < $start + $block_size; ++$i ) {
-            push( @block, $table->[$i] || 0 );
+            my $val = $table->[$i];
+            $val = $default if !defined($val);
+            push( @block, $val );
         }
 
         my $str = join( '|', @block );
-        my $block = $blocks{$str};
+        my $block_num = $block_nums{$str};
 
-        if ( !defined($block) ) {
-            $block = $block_count;
-            $blocks{$str} = $block;
-            ++$block_count;
+        if ( !defined($block_num) ) {
+            $block_num = $block_count++;
+            $block_nums{$str} = $block_num;
             push( @compressed, @block );
         }
 
-        push( @index, $block );
+        push( @index, $block_num );
+    }
+
+    # find default for index table
+
+    my @default_block;
+
+    for ( my $i = 0; $i < $block_size; ++$i ) {
+        push( @default_block, $default );
+    }
+
+    my $str = join( '|', @default_block );
+    my $default_block_num = $block_nums{$str};
+
+    if ( !defined($default_block_num) ) {
+        $default_block_num = $block_count++;
+        push( @compressed, @default_block );
     }
 
     my $index = UnicodeTable->new(
-        table => \@index,
-        max   => $block_count - 1,
-        shift => $shift,
+        table   => \@index,
+        default => $default_block_num,
+        max     => $block_count - 1,
+        shift   => $shift,
     );
 
     return UnicodeTable->new(
-        table => \@compressed,
-        max   => $self->{max},
-        shift => $self->{shift},
-        index => $index,
+        table   => \@compressed,
+        default => $default,
+        max     => $self->{max},
+        shift   => $self->{shift},
+        index   => $index,
     );
 }
 
