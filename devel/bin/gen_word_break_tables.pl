@@ -73,12 +73,21 @@ for ( my $i = 0; $i < 0x30000; ++$i ) {
 }
 
 if ( $opts{c} ) {
-    $wb->calc_sizes( [ 2, 5 ], [ 3, 9 ] );
+    $wb->calc_sizes( [ 2, 6 ], [ 3, 9 ] );
 }
 else {
-    # These give the smallest size
+    # Optimize for UTF-8
     my $shift1 = 6;
-    my $shift2 = 3;
+    my $shift2 = 6;
+
+    my $table0 = UnicodeTable->new(
+        table => [],
+        max   => 0,
+    );
+
+    for ( my $i = 0; $i < 0x80; ++$i ) {
+        $table0->set( $i, $wb->lookup($i) );
+    }
 
     my $table3 = $wb->compress($shift2);
     my $table2 = $table3->index->compress($shift1);
@@ -97,6 +106,8 @@ else {
 
     print $out_file (<DATA>);
 
+    $table0->dump( $out_file, 'wb_table0' );
+    print $out_file ("\n");
     $table1->dump( $out_file, 'wb_table1' );
     print $out_file ("\n");
     $table2->dump( $out_file, 'wb_table2' );

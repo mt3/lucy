@@ -201,12 +201,26 @@ S_parse_word(const char *text, size_t len, lucy_StringIter *iter,
 
 static int
 S_wb_lookup(const char *ptr) {
-    uint32_t c  = StrHelp_decode_utf8_char(ptr);
-    uint32_t t  = c >> WB_TABLE2_SHIFT;
-    uint32_t i1 = t >> WB_TABLE1_SHIFT;
-    if (i1 >= WB_TABLE1_SIZE) { return 0; }
-    uint32_t i2 = (wb_table1[i1] << WB_TABLE1_SHIFT) | (t & WB_TABLE1_MASK);
-    uint32_t i3 = (wb_table2[i2] << WB_TABLE2_SHIFT) | (c & WB_TABLE2_MASK);
+    uint8_t c = *(uint8_t*)ptr++;
+
+    if (c < 0x80) { return wb_table0[c]; }
+
+    uint32_t i2;
+    if (c < 0xE0) {
+        i2 = c & 0x1F;
+    }
+    else {
+        uint32_t i1;
+        if (c < 0xF0) {
+            i1 = c & 0x0F;
+        }
+        else {
+            i1 = ((c & 0x07) << 6) | (*ptr++ & 0x3F);
+        }
+        if (i1 >= WB_TABLE1_SIZE) { return 0; }
+        i2 = (wb_table1[i1] << 6) | (*ptr++ & 0x3F);
+    }
+    uint32_t i3 = (wb_table2[i2] << 6) | (*ptr++ & 0x3F);
     return wb_table3[i3];
 }
 
