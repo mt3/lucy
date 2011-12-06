@@ -109,7 +109,7 @@ StandardTokenizer_tokenize_str(StandardTokenizer *self, const char *text,
     while (iter.byte_pos < len) {
         int wb = S_wb_lookup(text + iter.byte_pos);
 
-        while (wb >= WB_ASingle && wb <=  WB_Katakana) {
+        while (wb >= WB_ASingle && wb <= WB_ExtendNumLet) {
             if (wb == WB_ASingle) {
                 wb = S_parse_single(text, len, &iter, inversion);
             }
@@ -163,37 +163,41 @@ S_parse_word(const char *text, size_t len, lucy_StringIter *iter,
         switch(wb) {
           case WB_ALetter:
           case WB_Numeric:
+            if (state == WB_Katakana) { goto word_break; }
+            break;
           case WB_Katakana:
+            if (state == WB_ALetter || state == WB_Numeric) {
+                goto word_break;
+            }
+            break;
           case WB_ExtendNumLet:
-            state = wb;
-            // fall through
+            break;
           case WB_Extend_Format:
-            S_iter_advance(text, iter);
-            end = *iter;
-            continue;
+            // keep state
+            wb = state;
+            break;
           case WB_MidNumLet:
           case WB_MidLetter:
           case WB_MidNum:
             if (state == WB_ALetter && wb != WB_MidNum
             ||  state == WB_Numeric && wb != WB_MidLetter) {
                 wb = S_skip_extend_format(text, len, iter);
-
-                if (wb == state) {
-                    S_iter_advance(text, iter);
-                    end = *iter;
-                    continue;
-                }
+                if (wb == state) { break; }
             }
+            goto word_break;
           default:
-            break;
+            goto word_break;
         }
 
-        break;
+        state = wb;
+        S_iter_advance(text, iter);
+        end = *iter;
     }
 
-    Token *token = Token_new(text + start.byte_pos,
-                             end.byte_pos - start.byte_pos,
-                             start.char_pos, end.char_pos, 1.0f, 1);
+    Token *token;
+  word_break:
+    token = Token_new(text + start.byte_pos, end.byte_pos - start.byte_pos,
+                      start.char_pos, end.char_pos, 1.0f, 1);
     Inversion_Append(inversion, token);
 
     return wb;
