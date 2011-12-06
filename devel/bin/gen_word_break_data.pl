@@ -79,26 +79,26 @@ if ( $opts{c} ) {
 }
 else {
     # Optimize for UTF-8
-    my $shift1 = 6;
-    my $shift2 = 6;
+    my $row_shift   = 6;
+    my $plane_shift = 6;
 
-    my $table0 = UnicodeTable->new(
+    my $wb_ascii = UnicodeTable->new(
         table => [],
         max   => 0,
     );
 
     for ( my $i = 0; $i < 0x80; ++$i ) {
-        $table0->set( $i, $wb->lookup($i) );
+        $wb_ascii->set( $i, $wb->lookup($i) );
     }
 
-    my $table3 = $wb->compress($shift2);
-    my $table2 = $table3->index->compress($shift1);
-    my $table1 = $table2->index;
-    $table3->index($table2);
+    my $wb_rows      = $wb->compress($row_shift);
+    my $wb_planes    = $wb_rows->index->compress($plane_shift);
+    my $wb_plane_map = $wb_planes->index;
+    $wb_rows->index($wb_planes);
 
     for ( my $i = 0; $i < 0x110000; ++$i ) {
         my $v1 = $wb->lookup($i);
-        my $v2 = $table3->lookup($i);
+        my $v2 = $wb_rows->lookup($i);
         die("test for code point $i failed, want $v1, got $v2")
             if $v1 != $v2;
     }
@@ -108,13 +108,13 @@ else {
 
     print $out_file (<DATA>);
 
-    $table0->dump( $out_file, 'wb_table0' );
+    $wb_ascii->dump( $out_file, 'wb_ascii' );
     print $out_file ("\n");
-    $table1->dump( $out_file, 'wb_table1' );
+    $wb_plane_map->dump( $out_file, 'wb_plane_map' );
     print $out_file ("\n");
-    $table2->dump( $out_file, 'wb_table2' );
+    $wb_planes->dump( $out_file, 'wb_planes' );
     print $out_file ("\n");
-    $table3->dump( $out_file, 'wb_table3' );
+    $wb_rows->dump( $out_file, 'wb_rows' );
 
     close($out_file);
 

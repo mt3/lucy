@@ -39,9 +39,9 @@ copyright holder.
 
 */
 
-#define WB_TABLE0_SIZE  128
+#define WB_ASCII_SIZE  128
 
-static const uint8_t wb_table0[128] = {
+static const uint8_t wb_ascii[128] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 9, 0, 7, 0, 3, 3,
     3, 3, 3, 3, 3, 3, 3, 3, 8, 9, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
@@ -50,11 +50,11 @@ static const uint8_t wb_table0[128] = {
     0, 0, 0
 };
 
-#define WB_TABLE1_SHIFT 6
-#define WB_TABLE1_MASK  63
-#define WB_TABLE1_SIZE  225
+#define WB_PLANE_MAP_SHIFT 6
+#define WB_PLANE_MAP_MASK  63
+#define WB_PLANE_MAP_SIZE  225
 
-static const uint8_t wb_table1[225] = {
+static const uint8_t wb_plane_map[225] = {
      0,  1,  2,  3,  4,  5,  5,  5,  5,  6,  7,  8,  8,  9, 10, 11, 12, 13, 14,
     15, 10, 10, 16, 10, 10, 10, 10, 17, 10, 18, 10, 10,  5,  5,  5,  5,  5,  5,
      5,  5,  5,  5, 19, 20, 10, 10, 10, 21, 10, 10, 10, 10, 10, 10, 10, 10, 10,
@@ -69,11 +69,11 @@ static const uint8_t wb_table1[225] = {
     10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 22
 };
 
-#define WB_TABLE2_SHIFT 6
-#define WB_TABLE2_MASK  63
-#define WB_TABLE2_SIZE  1472
+#define WB_PLANES_SHIFT 6
+#define WB_PLANES_MASK  63
+#define WB_PLANES_SIZE  1472
 
-static const uint8_t wb_table2[1472] = {
+static const uint8_t wb_planes[1472] = {
       0,   1,   2,   3,   4,   4,   4,   4,   4,   4,   4,   5,   6,   7,   8,
       9,   4,   4,  10,   4,  11,  12,  13,  14,  15,  16,   4,  17,  18,  19,
      20,  21,  22,  23,  24,  24,  25,  26,  27,  28,  29,  30,  31,  32,  33,
@@ -175,9 +175,9 @@ static const uint8_t wb_table2[1472] = {
      24,  24
 };
 
-#define WB_TABLE3_SIZE  13440
+#define WB_ROWS_SIZE  13440
 
-static const uint8_t wb_table3[13440] = {
+static const uint8_t wb_rows[13440] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 9, 0, 7, 0, 3, 3,
     3, 3, 3, 3, 3, 3, 3, 3, 8, 9, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,

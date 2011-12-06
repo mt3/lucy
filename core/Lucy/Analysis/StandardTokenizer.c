@@ -203,29 +203,59 @@ S_parse_word(const char *text, size_t len, lucy_StringIter *iter,
     return wb;
 }
 
+/*
+ * Conceptually, the word break property table is split into rows that
+ * contain 64 columns and planes that contain 64 rows (not to be confused
+ * the 65,536 character Unicode planes). So bits 0-5 of a code point contain
+ * the column index into a row, bits 6-11 contain the row index into a plane,
+ * and bits 12-20 contain the plane index.
+ *
+ * To save space, identical rows are merged so the row table contains only
+ * unique rows and the plane table contains row indices remapped to row ids.
+ * Then, identical planes are merged, and a plane map table is created with
+ * plane indices remapped to plane ids.
+ *
+ * The row and plane tables are simple one-dimensional arrays created by
+ * concatenating all unique rows and planes. So looking up an entry can be
+ * done by left shifting the id and ORing the index.
+ */
+
+#define WB_TABLE_LOOKUP(table, id, index) table [ ((id) << 6) | (index) ]
+
 static int
 S_wb_lookup(const char *ptr) {
-    uint8_t c = *(uint8_t*)ptr++;
+    uint8_t start = *(uint8_t*)ptr++;
 
-    if (c < 0x80) { return wb_table0[c]; }
+    if (start < 0x80) { return wb_ascii[start]; }
 
-    uint32_t i2;
-    if (c < 0xE0) {
-        i2 = c & 0x1F;
+    int plane_id, row_index;
+
+    if (start < 0xE0) {
+        // two byte sequence
+        // 110rrrrr 10cccccc
+        plane_id  = 0;
+        row_index = start & 0x1F;
     }
     else {
-        uint32_t i1;
-        if (c < 0xF0) {
-            i1 = c & 0x0F;
+        uint32_t plane_index;
+        if (start < 0xF0) {
+            // three byte sequence
+            // 1110pppp 10rrrrrr 10cccccc
+            plane_index = start & 0x0F;
         }
         else {
-            i1 = ((c & 0x07) << 6) | (*ptr++ & 0x3F);
+            // four byte sequence
+            // 11110ppp 10pppppp 10rrrrrr 10cccccc
+            plane_index = ((start & 0x07) << 6) | (*ptr++ & 0x3F);
         }
-        if (i1 >= WB_TABLE1_SIZE) { return 0; }
-        i2 = (wb_table1[i1] << 6) | (*ptr++ & 0x3F);
+        if (plane_index >= WB_PLANE_MAP_SIZE) { return 0; }
+        plane_id  = wb_plane_map[plane_index];
+        row_index = *ptr++ & 0x3F;
     }
-    uint32_t i3 = (wb_table2[i2] << 6) | (*ptr++ & 0x3F);
-    return wb_table3[i3];
+
+    int row_id = WB_TABLE_LOOKUP(wb_planes, plane_id, row_index);
+    int column_index = *ptr++ & 0x3F;
+    return WB_TABLE_LOOKUP(wb_rows, row_id, column_index);
 }
 
 static void
