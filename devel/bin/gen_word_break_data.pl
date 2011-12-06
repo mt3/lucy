@@ -18,9 +18,11 @@
 use strict;
 
 use Getopt::Std;
+use JSON;
 use UnicodeTable;
 
-my $out_filename = '../../core/Lucy/Analysis/WordBreak.tab';
+my $table_filename = '../../core/Lucy/Analysis/WordBreak.tab';
+my $tests_filename = '../../modules/unicode/ucd/WordBreakTest.json';
 
 my %wb_map = (
     CR           => 0,
@@ -101,8 +103,8 @@ else {
             if $v1 != $v2;
     }
 
-    open( my $out_file, '>', $out_filename )
-        or die("$out_filename: $!\n");
+    open( my $out_file, '>', $table_filename )
+        or die("$table_filename: $!\n");
 
     print $out_file (<DATA>);
 
@@ -114,6 +116,61 @@ else {
     print $out_file ("\n");
     $table3->dump( $out_file, 'wb_table3' );
 
+    close($out_file);
+
+    # convert UCD test suite
+
+    open( my $in_file, '<', "$src_dir/WordBreakTest.txt" )
+        or die("$src_dir/WordBreakTest.txt: $!\n");
+    binmode( $in_file, ':utf8' );
+
+    my @tests;
+
+    while (<$in_file>) {
+        s/\s*(#.*)?\z//s;
+        next if $_ eq '';
+        my @items = split(/\s+/);
+        my $word  = '';
+        my $text  = '';
+        my @words;
+
+        for ( my $i = 0; $i + 1 < @items; $i += 2 ) {
+            my ( $break, $code ) = ( $items[$i], hex( $items[ $i + 1 ] ) );
+            my $chr = chr($code);
+            $text .= $chr;
+
+            if ( $break eq "\xF7" ) {    # division sign
+                if ( $word ne '' ) {
+                    push( @words, $word );
+                    $word = '';
+                }
+
+                my $wb = $wb->lookup($code);
+                $word = $chr if $wb >= 1 && $wb <= 5;
+            }
+            elsif ( $break eq "\xD7" ) {    # multiplication sign
+                $word .= $chr if $word ne '';
+            }
+            else {
+                die("invalid break character '$break'");
+            }
+        }
+
+        push( @words, $word ) if $word ne '';
+
+        push(
+            @tests,
+            {   text  => $text,
+                words => \@words,
+            }
+        );
+    }
+
+    close($in_file);
+
+    open( $out_file, '>', $tests_filename )
+        or die("$tests_filename: $!\n");
+    print $out_file ( JSON->new->utf8->pretty->encode( \@tests ) );
     close($out_file);
 }
 
