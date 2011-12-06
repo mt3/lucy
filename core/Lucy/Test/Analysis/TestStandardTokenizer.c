@@ -46,9 +46,10 @@ test_tokenizer(TestBatch *batch) {
         ":"
         "1,02\xC2\xADZ4.38"
         "\xE0\xB8\x81\xC2\xAD\xC2\xAD"
-        "\xE0\xB8\x82"
+        "\xF0\xA0\x80\x80"
+        "a"
         "/",
-        33);
+        35);
     VArray *got = StandardTokenizer_Split(tokenizer, (CharBuf*)word);
     CharBuf *token = (CharBuf*)VA_Fetch(got, 0);
     TEST_TRUE(batch,
@@ -72,7 +73,13 @@ test_tokenizer(TestBatch *batch) {
     TEST_TRUE(batch,
               token
               && CB_Is_A(token, CHARBUF)
-              && CB_Equals_Str(token, "\xE0\xB8\x82", 3),
+              && CB_Equals_Str(token, "\xF0\xA0\x80\x80", 4),
+              "Token: %s", CB_Get_Ptr8(token));
+    token = (CharBuf*)VA_Fetch(got, 4);
+    TEST_TRUE(batch,
+              token
+              && CB_Is_A(token, CHARBUF)
+              && CB_Equals_Str(token, "a", 1),
               "Token: %s", CB_Get_Ptr8(token));
     DECREF(got);
     DECREF(tokenizer);
@@ -80,7 +87,7 @@ test_tokenizer(TestBatch *batch) {
 
 void
 TestStandardTokenizer_run_tests() {
-    TestBatch *batch = TestBatch_new(5);
+    TestBatch *batch = TestBatch_new(6);
 
     TestBatch_Plan(batch);
 
