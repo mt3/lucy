@@ -228,7 +228,7 @@ S_wb_lookup(const char *ptr) {
 
     if (start < 0x80) { return wb_ascii[start]; }
 
-    int plane_id, row_index;
+    size_t plane_id, row_index;
 
     if (start < 0xE0) {
         // two byte sequence
@@ -237,7 +237,7 @@ S_wb_lookup(const char *ptr) {
         row_index = start & 0x1F;
     }
     else {
-        uint32_t plane_index;
+        size_t plane_index;
         if (start < 0xF0) {
             // three byte sequence
             // 1110pppp 10rrrrrr 10cccccc
@@ -253,8 +253,8 @@ S_wb_lookup(const char *ptr) {
         row_index = *ptr++ & 0x3F;
     }
 
-    int row_id = WB_TABLE_LOOKUP(wb_planes, plane_id, row_index);
-    int column_index = *ptr++ & 0x3F;
+    size_t row_id = WB_TABLE_LOOKUP(wb_planes, plane_id, row_index);
+    size_t column_index = *ptr++ & 0x3F;
     return WB_TABLE_LOOKUP(wb_rows, row_id, column_index);
 }
 
