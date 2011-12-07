@@ -15,6 +15,38 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+=head1 NAME
+
+gen_word_break_data.pl - Generate word break table and tests
+
+=head1 SYNOPSIS
+
+    perl gen_word_break_data.pl [-c] UCD_SRC_DIR
+
+=head1 DESCRIPTION
+
+This script generates the tables to lookup Unicode word break properties
+for the StandardTokenizer. It also converts the word break test suite in
+the UCD to JSON.
+
+UCD_SRC_DIR should point to a directory containing the files
+WordBreakProperty.txt, WordBreakTest.txt, and DerivedCoreProperties.txt from
+the Unicode Character Database available at
+L<http://www.unicode.org/Public/6.0.0/ucd/>.
+
+=head1 OUTPUT FILES
+
+    modules/unicode/ucd/WordBreak.tab
+    modules/unicode/ucd/WordBreakTest.json
+
+=head1 OPTIONS
+
+=head2 -c
+
+Show total table size for different shift values
+
+=cut
+
 use strict;
 
 use Getopt::Std;
@@ -42,16 +74,7 @@ my %wb_map = (
 
 my %opts;
 if ( !getopts( 'c', \%opts ) || @ARGV != 1 ) {
-    print STDERR (<<'EOF');
-Usage: gen_word_break_tables.pl [-c] UNICODE_SRC_DIR
-
-UNICODE_SRC_DIR should point to a directory containing the files
-WordBreakProperty.txt and DerivedCoreProperties.txt from
-http://www.unicode.org/Public/6.0.0/ucd/
-
-Options:
--c  Show total table size for different shift values
-EOF
+    print STDERR ("Usage: $0 [-c] UCD_SRC_DIR\n");
     exit;
 }
 
@@ -77,107 +100,111 @@ for ( my $i = 0; $i < 0x30000; ++$i ) {
 
 if ( $opts{c} ) {
     $wb->calc_sizes( [ 2, 6 ], [ 3, 9 ] );
+    exit;
 }
-else {
-    # Optimize for UTF-8
-    my $row_shift   = 6;
-    my $plane_shift = 6;
 
-    my $wb_ascii = UnicodeTable->new(
-        table => [],
-        max   => 0,
-    );
+# Optimize for UTF-8
+my $row_shift   = 6;
+my $plane_shift = 6;
 
-    for ( my $i = 0; $i < 0x80; ++$i ) {
-        $wb_ascii->set( $i, $wb->lookup($i) );
-    }
+my $wb_ascii = UnicodeTable->new(
+    table => [],
+    max   => 0,
+);
 
-    my $wb_rows      = $wb->compress($row_shift);
-    my $wb_planes    = $wb_rows->compress_map($plane_shift);
-    my $wb_plane_map = $wb_planes->map_table;
+for ( my $i = 0; $i < 0x80; ++$i ) {
+    $wb_ascii->set( $i, $wb->lookup($i) );
+}
 
-    for ( my $i = 0; $i < 0x110000; ++$i ) {
-        my $v1 = $wb->lookup($i);
-        my $v2 = $wb_rows->lookup($i);
-        die("test for code point $i failed, want $v1, got $v2")
-            if $v1 != $v2;
-    }
+my $wb_rows      = $wb->compress($row_shift);
+my $wb_planes    = $wb_rows->compress_map($plane_shift);
+my $wb_plane_map = $wb_planes->map_table;
 
-    open( my $out_file, '>', $table_filename )
-        or die("$table_filename: $!\n");
+# test compressed table
 
-    print $out_file (<DATA>);
+for ( my $i = 0; $i < 0x110000; ++$i ) {
+    my $v1 = $wb->lookup($i);
+    my $v2 = $wb_rows->lookup($i);
+    die("test for code point $i failed, want $v1, got $v2")
+        if $v1 != $v2;
+}
 
-    $wb_ascii->dump( $out_file, 'wb_ascii' );
-    print $out_file ("\n");
-    $wb_plane_map->dump( $out_file, 'wb_plane_map' );
-    print $out_file ("\n");
-    $wb_planes->dump( $out_file, 'wb_planes' );
-    print $out_file ("\n");
-    $wb_rows->dump( $out_file, 'wb_rows' );
+# dump tables
 
-    close($out_file);
+open( my $out_file, '>', $table_filename )
+    or die("$table_filename: $!\n");
 
-    # convert UCD test suite
+print $out_file (<DATA>);
 
-    open( my $in_file, '<', "$src_dir/WordBreakTest.txt" )
-        or die("$src_dir/WordBreakTest.txt: $!\n");
-    binmode( $in_file, ':utf8' );
+$wb_ascii->dump( $out_file, 'wb_ascii' );
+print $out_file ("\n");
+$wb_plane_map->dump( $out_file, 'wb_plane_map' );
+print $out_file ("\n");
+$wb_planes->dump( $out_file, 'wb_planes' );
+print $out_file ("\n");
+$wb_rows->dump( $out_file, 'wb_rows' );
 
-    my @tests;
+close($out_file);
 
-    while (<$in_file>) {
-        s/\s*(#.*)?\z//s;
-        next if $_ eq '';
-        my @items = split(/\s+/);
-        my $word  = '';
-        my $text  = '';
-        my @words;
+# convert UCD test suite
 
-        for ( my $i = 0; $i + 1 < @items; $i += 2 ) {
-            my ( $break, $code ) = ( $items[$i], hex( $items[ $i + 1 ] ) );
-            my $chr = chr($code);
-            $text .= $chr;
+open( my $in_file, '<', "$src_dir/WordBreakTest.txt" )
+    or die("$src_dir/WordBreakTest.txt: $!\n");
+binmode( $in_file, ':utf8' );
 
-            if ( $break eq "\xF7" ) {    # division sign
-                if ( $word ne '' ) {
-                    push( @words, $word );
-                    $word = '';
-                }
+my @tests;
 
-                my $wb = $wb->lookup($code);
-                $word = $chr if $wb >= 1 && $wb <= 5;
+while (<$in_file>) {
+    s/\s*(#.*)?\z//s;
+    next if $_ eq '';
+    my @items = split(/\s+/);
+    my $word  = '';
+    my $text  = '';
+    my @words;
+
+    for ( my $i = 0; $i + 1 < @items; $i += 2 ) {
+        my ( $break, $code ) = ( $items[$i], hex( $items[ $i + 1 ] ) );
+        my $chr = chr($code);
+        $text .= $chr;
+
+        if ( $break eq "\xF7" ) {    # division sign
+            if ( $word ne '' ) {
+                push( @words, $word );
+                $word = '';
             }
-            elsif ( $break eq "\xD7" ) {    # multiplication sign
-                $word .= $chr if $word ne '';
-            }
-            else {
-                die("invalid break character '$break'");
-            }
+
+            my $wb = $wb->lookup($code);
+            $word = $chr if $wb >= 1 && $wb <= 5;
         }
-
-        push( @words, $word ) if $word ne '';
-
-        push(
-            @tests,
-            {   text  => $text,
-                words => \@words,
-            }
-        );
+        elsif ( $break eq "\xD7" ) {    # multiplication sign
+            $word .= $chr if $word ne '';
+        }
+        else {
+            die("invalid break character '$break'");
+        }
     }
 
-    close($in_file);
+    push( @words, $word ) if $word ne '';
 
-    open( $out_file, '>', $tests_filename )
-        or die("$tests_filename: $!\n");
-    print $out_file ( JSON->new->utf8->pretty->encode( \@tests ) );
-    close($out_file);
+    push(
+        @tests,
+        {   text  => $text,
+            words => \@words,
+        }
+    );
 }
+
+close($in_file);
+
+open( $out_file, '>', $tests_filename )
+    or die("$tests_filename: $!\n");
+print $out_file ( JSON->new->utf8->pretty->encode( \@tests ) );
+close($out_file);
 
 __DATA__
 /*
 
-This file is generated with devel/bin/gen_word_break_tables.pl. DO NOT EDIT!
+This file is generated with devel/bin/gen_word_break_data.pl. DO NOT EDIT!
 The contents of this file are derived from the Unicode Character Database,
 version 6.0.0, available from http://www.unicode.org/Public/6.0.0/ucd/.
 The Unicode copyright and permission notice follows.
