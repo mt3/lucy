@@ -21,8 +21,9 @@ use Getopt::Std;
 use JSON;
 use UnicodeTable;
 
-my $table_filename = '../../core/Lucy/Analysis/WordBreak.tab';
-my $tests_filename = '../../modules/unicode/ucd/WordBreakTest.json';
+my $output_dir     = '../../modules/unicode/ucd';
+my $table_filename = "$output_dir/WordBreak.tab";
+my $tests_filename = "$output_dir/WordBreakTest.json";
 
 my %wb_map = (
     CR           => 0,
