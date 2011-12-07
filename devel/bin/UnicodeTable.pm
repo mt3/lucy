@@ -37,10 +37,10 @@ UnicodeTable - Create compressed Unicode tables for C programs
 This module creates compressed tables used to lookup Unicode properties
 in C programs. To compress a table, it's split into blocks of a fixed
 size. Identical blocks are discovered and only unique blocks are written to
-the compressed table. An additional index table is created to map original
+the compressed table. An additional map table is created to map original
 block numbers to new ones.
 
-The index tables can then be compressed again using the same algorithm.
+The map tables can then be compressed again using the same algorithm.
 
 Powers of two are used as block sizes, so the table indices to lookup values
 can be computed using bit operations.
@@ -50,16 +50,16 @@ can be computed using bit operations.
 =head2 new
 
     my $table = UnicodeTable->new(
-        table   => \@table,
-        default => $default,
-        max     => $max,
-        shift   => $shift,
-        index   => $index,
+        table     => \@table,
+        default   => $default,
+        max       => $max,
+        shift     => $shift,
+        map_table => $map_table,
     );
 
 \@table is an arrayref with the table values, $max is the maximum value.
 The default value for undefined table entries is $default or 0.
-$shift and $index are used for compressed tables.
+$shift and $map_table are used for compressed tables.
 
 =cut
 
@@ -69,7 +69,7 @@ sub new {
     my $opts = @_ == 1 ? $_[0] : {@_};
     my $self = bless( {}, $class );
 
-    for my $name (qw(table default max shift index)) {
+    for my $name (qw(table default max shift map_table)) {
         $self->{$name} = $opts->{$name};
     }
 
@@ -172,7 +172,7 @@ sub read {
 
 =head2 max
 
-=head2 index
+=head2 map_table
 
 Accessors
 
@@ -190,10 +190,10 @@ sub max {
     return $_[0]->{max};
 }
 
-sub index {
+sub map_table {
     my $self = $_[0];
-    my $r    = $self->{index};
-    $self->{index} = $_[1] if @_ > 1;
+    my $r    = $self->{map_table};
+    $self->{map_table} = $_[1] if @_ > 1;
     return $r;
 }
 
@@ -239,12 +239,13 @@ Lookup value at index $i. Also works with compressed tables.
 sub lookup {
     my ( $self, $i ) = @_;
 
-    my $index = $self->{index};
+    my $map_table = $self->{map_table};
 
-    if ($index) {
-        $i = $index->mangle_index($i);
-        return $self->{default} if !defined($i);
-        return $self->{table}->[$i];
+    if ($map_table) {
+        my $shift = $self->{shift};
+        my $id    = $map_table->lookup( $i >> $shift );
+        my $j     = ( $id << $shift ) | ( $i & $self->{mask} );
+        return $self->{table}->[$j];
     }
     else {
         my $val = $self->{table}->[$i];
@@ -253,39 +254,12 @@ sub lookup {
     }
 }
 
-=head2 mangle_index
-
-    my $index = $index_table->mangle_index($i);
-
-Returns a mangled index to be used with a compressed table.
-
-=cut
-
-sub mangle_index {
-    my ( $self, $i ) = @_;
-
-    my $table = $self->{table};
-    my $shift = $self->{shift};
-    my $hi    = $i >> $shift;
-    my $index = $self->{index};
-
-    if ($index) {
-        $hi = $index->mangle_index($hi);
-        return undef if !defined($hi);
-    }
-    else {
-        return undef if $hi >= @$table;
-    }
-
-    return ( $table->[$hi] << $shift ) | ( $i & $self->{mask} );
-}
-
 =head2 compress
 
     my $compressed_table = $table->compress($shift);
 
 Returns a compressed version of this table which is linked to a second
-index table. Blocks of size (1 << $shift) are used.
+map table. Blocks of size (1 << $shift) are used.
 
 =cut
 
@@ -296,7 +270,7 @@ sub compress {
     my $default     = $self->{default};
     my $block_size  = 1 << $shift;
     my $block_count = 0;
-    my ( @compressed, @index, %block_nums );
+    my ( @compressed, @map_table, %block_nums );
 
     for ( my $start = 0; $start < @$table; $start += $block_size ) {
         my @block;
@@ -316,10 +290,10 @@ sub compress {
             push( @compressed, @block );
         }
 
-        push( @index, $block_num );
+        push( @map_table, $block_num );
     }
 
-    # find default for index table
+    # find default for map table
 
     my @default_block;
 
@@ -335,19 +309,18 @@ sub compress {
         push( @compressed, @default_block );
     }
 
-    my $index = UnicodeTable->new(
-        table   => \@index,
+    my $map_table = UnicodeTable->new(
+        table   => \@map_table,
         default => $default_block_num,
         max     => $block_count - 1,
-        shift   => $shift,
     );
 
     return UnicodeTable->new(
-        table   => \@compressed,
-        default => $default,
-        max     => $self->{max},
-        shift   => $self->{shift},
-        index   => $index,
+        table     => \@compressed,
+        default   => $default,
+        max       => $self->{max},
+        shift     => $shift,
+        map_table => $map_table,
     );
 }
 
@@ -405,22 +378,23 @@ sub calc_sizes {
     my ( $self, $range2, $range1 ) = @_;
 
     for ( my $shift2 = $range2->[0]; $shift2 <= $range2->[1]; ++$shift2 ) {
-        my $comp  = $self->compress($shift2);
-        my $index = $comp->index;
-        my $size3 = $comp->size;
+        my $comp      = $self->compress($shift2);
+        my $map_table = $comp->map_table;
+        my $size3     = $comp->size;
 
         for ( my $shift1 = $range1->[0]; $shift1 <= $range1->[1]; ++$shift1 )
         {
-            my $comp_index = $index->compress($shift1);
+            my $comp_map_table = $map_table->compress($shift1);
 
-            my $size1 = $comp_index->index->size;
-            my $size2 = $comp_index->size;
+            my $size1 = $comp_map_table->map_table->size;
+            my $size2 = $comp_map_table->size;
 
             printf(
                 "shift %2d %2d: %6d + %6d + %6d = %7d bytes, %4d %4d\n",
-                $shift1, $shift2, $size1, $size2, $size3,
-                $size1 + $size2 + $size3,
-                $comp_index->index->max, $comp_index->max,
+                $shift1,                         $shift2,
+                $size1,                          $size2,
+                $size3,                          $size1 + $size2 + $size3,
+                $comp_map_table->map_table->max, $comp_map_table->max,
             );
         }
 

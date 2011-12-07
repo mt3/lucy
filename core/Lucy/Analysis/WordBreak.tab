@@ -50,8 +50,6 @@ static const uint8_t wb_ascii[128] = {
     0, 0, 0
 };
 
-#define WB_PLANE_MAP_SHIFT 6
-#define WB_PLANE_MAP_MASK  63
 #define WB_PLANE_MAP_SIZE  225
 
 static const uint8_t wb_plane_map[225] = {
@@ -175,6 +173,8 @@ static const uint8_t wb_planes[1472] = {
      24,  24
 };
 
+#define WB_ROWS_SHIFT 6
+#define WB_ROWS_MASK  63
 #define WB_ROWS_SIZE  13440
 
 static const uint8_t wb_rows[13440] = {
