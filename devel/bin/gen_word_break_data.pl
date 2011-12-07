@@ -93,9 +93,8 @@ else {
     }
 
     my $wb_rows      = $wb->compress($row_shift);
-    my $wb_planes    = $wb_rows->map_table->compress($plane_shift);
+    my $wb_planes    = $wb_rows->compress_map($plane_shift);
     my $wb_plane_map = $wb_planes->map_table;
-    $wb_rows->map_table($wb_planes);
 
     for ( my $i = 0; $i < 0x110000; ++$i ) {
         my $v1 = $wb->lookup($i);

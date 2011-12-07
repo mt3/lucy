@@ -38,7 +38,7 @@ This module creates compressed tables used to lookup Unicode properties
 in C programs. To compress a table, it's split into blocks of a fixed
 size. Identical blocks are discovered and only unique blocks are written to
 the compressed table. An additional map table is created to map original
-block numbers to new ones.
+block indices to block ids.
 
 The map tables can then be compressed again using the same algorithm.
 
@@ -50,14 +50,14 @@ can be computed using bit operations.
 =head2 new
 
     my $table = UnicodeTable->new(
-        table     => \@table,
+        values    => \@values,
         default   => $default,
         max       => $max,
         shift     => $shift,
         map_table => $map_table,
     );
 
-\@table is an arrayref with the table values, $max is the maximum value.
+\@values is an arrayref with the table values, $max is the maximum value.
 The default value for undefined table entries is $default or 0.
 $shift and $map_table are used for compressed tables.
 
@@ -69,7 +69,7 @@ sub new {
     my $opts = @_ == 1 ? $_[0] : {@_};
     my $self = bless( {}, $class );
 
-    for my $name (qw(table default max shift map_table)) {
+    for my $name (qw(values default max shift map_table)) {
         $self->{$name} = $opts->{$name};
     }
 
@@ -102,7 +102,7 @@ sub read {
 
     my $opts = @_ == 1 ? $_[0] : {@_};
     my $max = 0;
-    my @table;
+    my @values;
 
     my $filename = $opts->{filename};
     die('filename missing') if !defined($filename);
@@ -133,10 +133,10 @@ sub read {
         if ( $chars =~ /^[0-9A-Fa-f]+\z/ ) {
             my $i = hex($chars);
             if ( $type eq 'boolean' ) {
-                $table[$i] |= $val;
+                $values[$i] |= $val;
             }
             else {
-                $table[$i] = $val;
+                $values[$i] = $val;
             }
         }
         elsif ( $chars =~ /^(\w+)\.\.(\w+)\z/ ) {
@@ -145,10 +145,10 @@ sub read {
 
             for ( my $i = $l; $i <= $r; ++$i ) {
                 if ( $type eq 'boolean' ) {
-                    $table[$i] |= $val;
+                    $values[$i] |= $val;
                 }
                 else {
-                    $table[$i] = $val;
+                    $values[$i] = $val;
                 }
             }
         }
@@ -160,7 +160,7 @@ sub read {
     close($file);
 
     return $class->new(
-        table   => \@table,
+        values  => \@values,
         default => $opts->{default},
         max     => $max,
     );
@@ -191,10 +191,7 @@ sub max {
 }
 
 sub map_table {
-    my $self = $_[0];
-    my $r    = $self->{map_table};
-    $self->{map_table} = $_[1] if @_ > 1;
-    return $r;
+    return $_[0]->{map_table};
 }
 
 =head2 set
@@ -207,7 +204,7 @@ Set entry at index $i to $value. Don't use with compressed tables.
 
 sub set {
     my ( $self, $i, $value ) = @_;
-    $self->{table}[$i] = $value;
+    $self->{values}[$i] = $value;
     $self->{max} = $value if $value > $self->{max};
 }
 
@@ -225,7 +222,7 @@ sub size {
     my $max = $self->{max};
     my $bytes = $max < 0x100 ? 1 : $max < 0x10000 ? 2 : 4;
 
-    return @{ $self->{table} } * $bytes;
+    return @{ $self->{values} } * $bytes;
 }
 
 =head2 lookup
@@ -245,10 +242,10 @@ sub lookup {
         my $shift = $self->{shift};
         my $id    = $map_table->lookup( $i >> $shift );
         my $j     = ( $id << $shift ) | ( $i & $self->{mask} );
-        return $self->{table}->[$j];
+        return $self->{values}->[$j];
     }
     else {
-        my $val = $self->{table}->[$i];
+        my $val = $self->{values}->[$i];
         return $self->{default} if !defined($val);
         return $val;
     }
@@ -266,31 +263,31 @@ map table. Blocks of size (1 << $shift) are used.
 sub compress {
     my ( $self, $shift ) = @_;
 
-    my $table       = $self->{table};
+    my $values      = $self->{values};
     my $default     = $self->{default};
     my $block_size  = 1 << $shift;
     my $block_count = 0;
-    my ( @compressed, @map_table, %block_nums );
+    my ( @compressed, @map_values, %block_ids );
 
-    for ( my $start = 0; $start < @$table; $start += $block_size ) {
+    for ( my $start = 0; $start < @$values; $start += $block_size ) {
         my @block;
 
         for ( my $i = $start; $i < $start + $block_size; ++$i ) {
-            my $val = $table->[$i];
+            my $val = $values->[$i];
             $val = $default if !defined($val);
             push( @block, $val );
         }
 
         my $str = join( '|', @block );
-        my $block_num = $block_nums{$str};
+        my $block_id = $block_ids{$str};
 
-        if ( !defined($block_num) ) {
-            $block_num = $block_count++;
-            $block_nums{$str} = $block_num;
+        if ( !defined($block_id) ) {
+            $block_id = $block_count++;
+            $block_ids{$str} = $block_id;
             push( @compressed, @block );
         }
 
-        push( @map_table, $block_num );
+        push( @map_values, $block_id );
     }
 
     # find default for map table
@@ -302,26 +299,44 @@ sub compress {
     }
 
     my $str = join( '|', @default_block );
-    my $default_block_num = $block_nums{$str};
+    my $default_block_id = $block_ids{$str};
 
-    if ( !defined($default_block_num) ) {
-        $default_block_num = $block_count++;
+    if ( !defined($default_block_id) ) {
+        $default_block_id = $block_count++;
         push( @compressed, @default_block );
     }
 
     my $map_table = UnicodeTable->new(
-        table   => \@map_table,
-        default => $default_block_num,
+        values  => \@map_values,
+        default => $default_block_id,
         max     => $block_count - 1,
     );
 
     return UnicodeTable->new(
-        table     => \@compressed,
+        values    => \@compressed,
         default   => $default,
         max       => $self->{max},
         shift     => $shift,
         map_table => $map_table,
     );
+}
+
+=head2 compress_map
+
+    my $map_table = $table->compress_map($shift);
+
+Compress the map table of a table for multi stage lookup. Returns the
+compressed map table.
+
+=cut
+
+sub compress_map {
+    my ( $self, $shift ) = @_;
+
+    my $comp = $self->{map_table}->compress($shift);
+    $self->{map_table} = $comp;
+
+    return $comp;
 }
 
 =head2 dump
@@ -335,8 +350,8 @@ Dump the table as C code to filehandle $file. The table name is $name.
 sub dump {
     my ( $self, $file, $name ) = @_;
 
-    my $table   = $self->{table};
-    my $size    = @$table;
+    my $values  = $self->{values};
+    my $size    = @$values;
     my $uc_name = uc($name);
 
     print $file (<<"EOF") if $self->{shift};
@@ -358,13 +373,13 @@ EOF
     my $i = 0;
 
     while ( $i < $size ) {
-        printf $file ( "    \%${pad}d", $table->[$i] );
+        printf $file ( "    \%${pad}d", $values->[$i] );
 
         my $max = $i + $vals_per_line;
         $max = $size if $max > $size;
 
         while ( ++$i < $max ) {
-            printf $file ( ", \%${pad}d", $table->[$i] );
+            printf $file ( ", \%${pad}d", $values->[$i] );
         }
 
         print $file (',') if $i < $size;
