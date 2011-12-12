@@ -104,6 +104,12 @@ StandardTokenizer_transform_text(StandardTokenizer *self, CharBuf *text) {
 void
 StandardTokenizer_tokenize_str(StandardTokenizer *self, const char *text,
                                size_t len, Inversion *inversion) {
+    if (len >= 1 && (uint8_t)text[len-1] >= 0xC0
+    ||  len >= 2 && (uint8_t)text[len-2] >= 0xE0
+    ||  len >= 3 && (uint8_t)text[len-3] >= 0xF0) {
+        THROW(ERR, "Invalid UTF-8 sequence");
+    }
+
     lucy_StringIter iter = { 0, 0 };
 
     while (iter.byte_pos < len) {
@@ -231,6 +237,9 @@ S_wb_lookup(const char *ptr) {
     size_t plane_id, row_index;
 
     if (start < 0xE0) {
+        if (start < 0xC0) {
+            THROW(ERR, "Invalid UTF-8 sequence");
+        }
         // two byte sequence
         // 110rrrrr 10cccccc
         plane_id  = 0;
